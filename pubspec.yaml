@@ -1,0 +1,39 @@
+name: ogni_tipo_di_insegnamento
+description: Ogni tipo di insegnamento - app cristiana
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_pdfview: ^1.4.4
+  path_provider: ^2.1.5
+  flutter_cache_manager: ^3.3.1
+  open_filex: ^4.7.0
+  url_launcher: ^6.3.2
+  share_plus: ^12.0.1
+  http: ^1.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icona.png"
+  adaptive_icon_background: "#F5E66B"
+  adaptive_icon_foreground: "assets/ic_launcher_foreground.png"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
