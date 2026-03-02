@@ -20,10 +20,11 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("C:\\Users\\torla\\OneDrive\\Documenti\\Desktop\\Firma Torlai.jks")
-            storePassword = "Max1.2Sic!!"
-            keyAlias = "key Torla89"
-            keyPassword = "Max1.2Sic!!"
+            keyAlias = System.getenv("CM_KEY_ALIAS") ?: "key Torla89"
+            keyPassword = System.getenv("CM_KEY_PASSWORD") ?: "Max1.2Sic!!"
+            storeFile = System.getenv("CM_KEYSTORE_PATH")?.let { file(it) }
+                ?: file("C:\\Users\\torla\\OneDrive\\Documenti\\Desktop\\Firma Torlai.jks")
+            storePassword = System.getenv("CM_KEYSTORE_PASSWORD") ?: "Max1.2Sic!!"
         }
     }
 
