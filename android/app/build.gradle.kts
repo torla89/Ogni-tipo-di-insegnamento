@@ -32,8 +32,8 @@ android {
         applicationId = "com.ognitipodiinsegnamento"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 16
-        versionName = "26.03.02"
+        versionCode = 17
+        versionName = "26.03.03"
     }
 
     buildTypes {
