@@ -1,4 +1,4 @@
-package com.ognitipodiinsegnamento
+package com.example.ognitipodiinsegnamento
 
 import io.flutter.embedding.android.FlutterActivity
 

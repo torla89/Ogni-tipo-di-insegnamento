@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.ognitipodiinsegnamento"
+    namespace = "com.ognitipodiinsegnamento"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.ognitipodiinsegnamento"
+        applicationId = "com.ognitipodiinsegnamento"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = 16
