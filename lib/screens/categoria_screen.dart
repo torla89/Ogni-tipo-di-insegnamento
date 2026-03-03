@@ -37,10 +37,9 @@ class CategoriaScreen extends StatelessWidget {
             : ListView.builder(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 24),
-                itemCount: categoria.voci.length + 1, // +1 per il titolo
+                itemCount: categoria.voci.length + 1,
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    // Titolo della sezione
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
@@ -87,7 +86,7 @@ class CategoriaScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 13,
+                            fontSize: 14,
                           ),
                         ),
                       ),

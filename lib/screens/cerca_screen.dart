@@ -117,11 +117,11 @@ class _CercaScreenState extends State<CercaScreen> {
                                 children: [
                                   Text(r.voce.titolo,
                                       style: const TextStyle(
-                                          fontSize: 13,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.bold)),
                                   Text(r.categoria,
                                       style: const TextStyle(
-                                          fontSize: 10,
+                                          fontSize: 12,
                                           color: Colors.white70)),
                                 ],
                               ),
