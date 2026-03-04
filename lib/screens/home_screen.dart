@@ -30,7 +30,7 @@ class HomeScreen extends StatelessWidget {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth > 700;
+            final isDesktop = constraints.maxWidth > 1000;
             final paddingH = isDesktop ? 24.0 : 8.0;
             final altezzaBottone = isDesktop ? 48.0 : 44.0;
             final fontSize = isDesktop ? 13.0 : 14.0;

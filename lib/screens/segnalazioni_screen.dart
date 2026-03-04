@@ -103,7 +103,7 @@ class _SegnalazioniScreenState extends State<SegnalazioniScreen> {
         color: const Color(0xFF58A1C3),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth > 700;
+            final isDesktop = constraints.maxWidth > 1000;
             final maxWidth = isDesktop ? 650.0 : double.infinity;
 
             return Center(

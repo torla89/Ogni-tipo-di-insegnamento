@@ -46,7 +46,7 @@ class _CercaScreenState extends State<CercaScreen> {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth > 700;
+            final isDesktop = constraints.maxWidth > 1000;
             final maxWidth = isDesktop ? 800.0 : double.infinity;
             final paddingH = isDesktop ? 0.0 : 16.0;
 
