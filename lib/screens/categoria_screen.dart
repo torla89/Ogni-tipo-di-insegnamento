@@ -33,7 +33,7 @@ class CategoriaScreen extends StatelessWidget {
               )
             : LayoutBuilder(
                 builder: (context, constraints) {
-                  final isDesktop = constraints.maxWidth > 1000;
+                  final isDesktop = constraints.maxWidth > 9999;
                   final numColonne = isDesktop ? 3 : 1;
                   final paddingH = isDesktop ? 48.0 : 16.0;
 
