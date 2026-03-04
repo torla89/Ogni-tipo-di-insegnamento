@@ -136,13 +136,13 @@ class _CercaScreenState extends State<CercaScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(r.voce.titolo,
+                                          Text(r.voce.titolo.toUpperCase(),
                                               style: TextStyle(
                                                   fontSize:
                                                       isDesktop ? 14 : 14,
                                                   fontWeight:
                                                       FontWeight.bold)),
-                                          Text(r.categoria,
+                                          Text(r.categoria.toUpperCase(),
                                               style: const TextStyle(
                                                   fontSize: 12,
                                                   color: Colors.white70)),

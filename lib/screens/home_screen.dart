@@ -28,7 +28,10 @@ class HomeScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: LayoutBuilder(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth > 1000;
             final paddingH = isDesktop ? 24.0 : 8.0;
@@ -128,7 +131,7 @@ class HomeScreen extends StatelessWidget {
                   if (i < colonnaDestra.length) {
                     final catDx = colonnaDestra[i];
                     destro = _buildBottoneGriglia(context,
-                      titolo: catDx.titolo, fontSize: fontSize,
+                      titolo: catDx.titolo.toUpperCase(), fontSize: fontSize,
                       onTap: () => Navigator.push(context, MaterialPageRoute(
                           builder: (_) => CategoriaScreen(categoria: catDx))),
                     );
@@ -157,7 +160,7 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Expanded(child: _buildBottoneGriglia(context,
-                            titolo: catSx.titolo, fontSize: fontSize,
+                            titolo: catSx.titolo.toUpperCase(), fontSize: fontSize,
                             onTap: () => Navigator.push(context, MaterialPageRoute(
                                 builder: (_) => CategoriaScreen(categoria: catSx))),
                           )),
@@ -175,6 +178,8 @@ class HomeScreen extends StatelessWidget {
               ],
             );
           },
+        ),
+          ),
         ),
       ),
     );
@@ -210,7 +215,7 @@ class HomeScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: () => rigaVoci[j].onTap(context),
-                      child: Text(rigaVoci[j].titolo,
+                      child: Text(rigaVoci[j].titolo.toUpperCase(),
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.white, fontSize: fontSize, letterSpacing: 0.2)),
                     ),
@@ -275,7 +280,7 @@ class HomeScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
       onPressed: onTap,
-      child: Text(titolo,
+      child: Text(titolo.toUpperCase(),
         textAlign: TextAlign.center,
         style: TextStyle(color: Colors.white, fontSize: fontSize, letterSpacing: 0.2)),
     );
