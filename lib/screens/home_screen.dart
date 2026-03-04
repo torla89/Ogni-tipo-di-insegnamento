@@ -14,12 +14,8 @@ class HomeScreen extends StatelessWidget {
     final categorieOrdinate = List<Categoria>.from(categorie)
       ..sort((a, b) => a.titolo.compareTo(b.titolo));
 
-    // Colonna sinistra: fino a Gioventù (indice 0-21, 22 voci)
     final colonnaSinistra = categorieOrdinate.sublist(0, 22);
-    // Colonna destra: da Grazia in poi (indice 22-40, 19 voci)
     final colonnaDestra = categorieOrdinate.sublist(22);
-
-    final int numRighe = colonnaSinistra.length; // 22 righe
 
     return Scaffold(
       appBar: AppBar(
@@ -32,136 +28,218 @@ class HomeScreen extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          children: [
-            const Text(
-              'Menù principale',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isDesktop = constraints.maxWidth > 700;
+            final paddingH = isDesktop ? 24.0 : 8.0;
+            final altezzaBottone = isDesktop ? 48.0 : 44.0;
+            final fontSize = isDesktop ? 13.0 : 14.0;
 
-            // CERCA
-            _buildBottonePieno(context,
-              titolo: 'CERCA PER PAROLE CHIAVE',
-              colore: const Color(0xFF2E7D32),
-              icona: Icons.search,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const CercaScreen())),
-            ),
-
-            // INTRODUZIONE
-            _buildBottonePieno(context,
-              titolo: 'INTRODUZIONE',
-              colore: const Color(0xFF9EF1E1),
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const PdfViewerScreen(
-                      nomePdf: 'leggimi.pdf', titolo: 'Introduzione'))),
-            ),
-
-            const SizedBox(height: 4),
-
-            // Griglia 2 colonne
-            // Righe 0-18: entrambe le colonne hanno un bottone categoria
-            // Righe 19-20: colonna sinistra ha categoria, colonna destra ha SEGNALAZIONI/DOWNLOAD
-            // Riga 21: solo colonna sinistra (Gioventù)
-            ...List.generate(numRighe, (i) {
-              final catSx = colonnaSinistra[i];
-
-              Widget destro;
-              if (i < colonnaDestra.length) {
-                // Categoria normale nella colonna destra
-                final catDx = colonnaDestra[i];
-                destro = _buildBottoneGriglia(context,
-                  titolo: catDx.titolo,
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: catDx))),
-                );
-              } else if (i == colonnaDestra.length) {
-                // SEGNALAZIONI
-                destro = _buildBottoneGriglia(context,
+            // Su desktop: 4 colonne con tutte le categorie + segnalazioni/download
+            if (isDesktop) {
+              final tutteLeVoci = <_VoceGriglia>[
+                ...categorieOrdinate.map((c) => _VoceGriglia(
+                  titolo: c.titolo,
+                  colore: const Color(0xFF1829E8),
+                  onTap: (ctx) => Navigator.push(ctx, MaterialPageRoute(
+                      builder: (_) => CategoriaScreen(categoria: c))),
+                )),
+                _VoceGriglia(
                   titolo: 'SEGNALAZIONI',
                   colore: const Color(0xFFE81829),
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const SegnalazioniScreen())),
-                );
-              } else if (i == colonnaDestra.length + 1) {
-                // DOWNLOAD
-                destro = _buildBottoneGriglia(context,
+                  onTap: (ctx) => Navigator.push(ctx, MaterialPageRoute(
+                      builder: (_) => const SegnalazioniScreen())),
+                ),
+                _VoceGriglia(
                   titolo: 'DOWNLOAD',
                   colore: const Color(0xFFE81829),
-                  onTap: () => Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const DownloadScreen())),
-                );
-              } else {
-                // Spazio vuoto
-                destro = const SizedBox.shrink();
-              }
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(child: _buildBottoneGriglia(context,
-                        titolo: catSx.titolo,
-                        onTap: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: catSx))),
-                      )),
-                      const SizedBox(width: 4),
-                      Expanded(child: destro),
-                    ],
-                  ),
+                  onTap: (ctx) => Navigator.push(ctx, MaterialPageRoute(
+                      builder: (_) => const DownloadScreen())),
                 ),
-              );
-            }),
+              ];
 
-            const SizedBox(height: 12),
-
-            // Card ATTENZIONE
-            Card(
-              color: const Color(0xCC000000),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 6,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(children: [
-                  Image.asset('assets/icona_di_attenzione_11924386.png',
-                    width: 56, height: 56,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.warning, color: Colors.orange, size: 44)),
-                  const SizedBox(width: 12),
-                  const Expanded(child: Text(
-                    'ATTENZIONE: nella sezione download troverete gratuitamente i link per scaricare l\'app per tutti i principali sistemi operativi',
-                    style: TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
+              return ListView(
+                padding: EdgeInsets.symmetric(horizontal: paddingH, vertical: 10),
+                children: [
+                  const Text('Menù principale',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black)),
+                  const SizedBox(height: 8),
+                  Row(children: [
+                    Expanded(child: _buildBottonePieno(context,
+                      titolo: 'CERCA PER PAROLE CHIAVE',
+                      colore: const Color(0xFF2E7D32),
+                      icona: Icons.search,
+                      altezza: altezzaBottone,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CercaScreen())),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildBottonePieno(context,
+                      titolo: 'INTRODUZIONE',
+                      colore: const Color(0xFF9EF1E1),
+                      altezza: altezzaBottone,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfViewerScreen(
+                          nomePdf: 'leggimi.pdf', titolo: 'Introduzione'))),
+                    )),
+                  ]),
+                  const SizedBox(height: 6),
+                  _buildGriglia(context: context, voci: tutteLeVoci, numColonne: 4,
+                      altezzaBottone: altezzaBottone, fontSize: fontSize),
+                  const SizedBox(height: 12),
+                  Center(child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 700),
+                    child: _buildCardAttenzione(),
                   )),
-                ]),
-              ),
-            ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            }
 
-            const SizedBox(height: 20),
-          ],
+            // Su mobile: 2 colonne con logica originale
+            final int numRighe = colonnaSinistra.length; // 22
+
+            return ListView(
+              padding: EdgeInsets.symmetric(horizontal: paddingH, vertical: 10),
+              children: [
+                const Text('Menù principale',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black)),
+                const SizedBox(height: 8),
+                _buildBottonePieno(context,
+                  titolo: 'CERCA PER PAROLE CHIAVE',
+                  colore: const Color(0xFF2E7D32),
+                  icona: Icons.search,
+                  altezza: altezzaBottone,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CercaScreen())),
+                ),
+                _buildBottonePieno(context,
+                  titolo: 'INTRODUZIONE',
+                  colore: const Color(0xFF9EF1E1),
+                  altezza: altezzaBottone,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PdfViewerScreen(
+                      nomePdf: 'leggimi.pdf', titolo: 'Introduzione'))),
+                ),
+                const SizedBox(height: 4),
+
+                ...List.generate(numRighe, (i) {
+                  final catSx = colonnaSinistra[i];
+
+                  Widget destro;
+                  if (i < colonnaDestra.length) {
+                    final catDx = colonnaDestra[i];
+                    destro = _buildBottoneGriglia(context,
+                      titolo: catDx.titolo, fontSize: fontSize,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => CategoriaScreen(categoria: catDx))),
+                    );
+                  } else if (i == colonnaDestra.length) {
+                    destro = _buildBottoneGriglia(context,
+                      titolo: 'SEGNALAZIONI',
+                      colore: const Color(0xFFE81829), fontSize: fontSize,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const SegnalazioniScreen())),
+                    );
+                  } else if (i == colonnaDestra.length + 1) {
+                    destro = _buildBottoneGriglia(context,
+                      titolo: 'DOWNLOAD',
+                      colore: const Color(0xFFE81829), fontSize: fontSize,
+                      onTap: () => Navigator.push(context, MaterialPageRoute(
+                          builder: (_) => const DownloadScreen())),
+                    );
+                  } else {
+                    destro = const SizedBox.shrink();
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: _buildBottoneGriglia(context,
+                            titolo: catSx.titolo, fontSize: fontSize,
+                            onTap: () => Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => CategoriaScreen(categoria: catSx))),
+                          )),
+                          const SizedBox(width: 4),
+                          Expanded(child: destro),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 12),
+                _buildCardAttenzione(),
+                const SizedBox(height: 20),
+              ],
+            );
+          },
         ),
       ),
     );
+  }
+
+  Widget _buildGriglia({
+    required BuildContext context,
+    required List<_VoceGriglia> voci,
+    required int numColonne,
+    required double altezzaBottone,
+    required double fontSize,
+  }) {
+    final righe = <Widget>[];
+    for (int i = 0; i < voci.length; i += numColonne) {
+      final rigaVoci = voci.sublist(i, (i + numColonne).clamp(0, voci.length));
+      righe.add(Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (int j = 0; j < rigaVoci.length; j++) ...[
+                if (j > 0) const SizedBox(width: 4),
+                Expanded(
+                  child: SizedBox(
+                    height: altezzaBottone,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: rigaVoci[j].colore,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () => rigaVoci[j].onTap(context),
+                      child: Text(rigaVoci[j].titolo,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.white, fontSize: fontSize, letterSpacing: 0.2)),
+                    ),
+                  ),
+                ),
+              ],
+              for (int k = rigaVoci.length; k < numColonne; k++) ...[
+                const SizedBox(width: 4),
+                const Expanded(child: SizedBox()),
+              ],
+            ],
+          ),
+        ),
+      ));
+    }
+    return Column(children: righe);
   }
 
   Widget _buildBottonePieno(BuildContext context, {
     required String titolo,
     required Color colore,
     required VoidCallback onTap,
+    required double altezza,
     IconData? icona,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: SizedBox(
-        height: 44,
+        height: altezza,
         width: double.infinity,
         child: ElevatedButton.icon(
           icon: icona != null
@@ -169,8 +247,7 @@ class HomeScreen extends StatelessWidget {
               : const SizedBox.shrink(),
           label: Text(titolo,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white, fontSize: 14, letterSpacing: 0.2)),
+            style: const TextStyle(color: Colors.white, fontSize: 14, letterSpacing: 0.2)),
           style: ElevatedButton.styleFrom(
             backgroundColor: colore,
             foregroundColor: Colors.white,
@@ -186,6 +263,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildBottoneGriglia(BuildContext context, {
     required String titolo,
     required VoidCallback onTap,
+    required double fontSize,
     Color colore = const Color(0xFF1829E8),
   }) {
     return ElevatedButton(
@@ -199,8 +277,36 @@ class HomeScreen extends StatelessWidget {
       onPressed: onTap,
       child: Text(titolo,
         textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white, fontSize: 14, letterSpacing: 0.2)),
+        style: TextStyle(color: Colors.white, fontSize: fontSize, letterSpacing: 0.2)),
     );
   }
+
+  Widget _buildCardAttenzione() {
+    return Card(
+      color: const Color(0xCC000000),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(children: [
+          Image.asset('assets/icona_di_attenzione_11924386.png',
+            width: 56, height: 56,
+            errorBuilder: (_, __, ___) =>
+                const Icon(Icons.warning, color: Colors.orange, size: 44)),
+          const SizedBox(width: 12),
+          const Expanded(child: Text(
+            'ATTENZIONE: nella sezione download troverete gratuitamente i link per scaricare l\'app per tutti i principali sistemi operativi',
+            style: TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
+          )),
+        ]),
+      ),
+    );
+  }
+}
+
+class _VoceGriglia {
+  final String titolo;
+  final Color colore;
+  final void Function(BuildContext) onTap;
+  _VoceGriglia({required this.titolo, required this.colore, required this.onTap});
 }
