@@ -39,7 +39,7 @@ workflows:
 
     publishing:
       app_store_connect:
-        api_key: Codemagic
+        api_key: Codemagic 2
         submit_to_testflight: false
         submit_to_app_store: false    # metti true quando sei pronto al rilascio
 
@@ -116,5 +116,5 @@ workflows:
 
     publishing:
       app_store_connect:
-        api_key: Codemagic
+        api_key: Codemagic 2
         submit_to_testflight: true
