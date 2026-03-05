@@ -1,8 +1,5 @@
 workflows:
 
-  # ─────────────────────────────────────────────
-  #  BUILD MACOS
-  # ─────────────────────────────────────────────
   macos-release:
     name: macOS Release
     max_build_duration: 60
@@ -37,16 +34,7 @@ workflows:
       - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
 
-    publishing:
-      app_store_connect:
-        api_key: Codemagic 2
-        submit_to_testflight: false
-        submit_to_app_store: false
 
-
-  # ─────────────────────────────────────────────
-  #  BUILD WINDOWS
-  # ─────────────────────────────────────────────
   windows-release:
     name: Windows Release
     max_build_duration: 60
@@ -66,9 +54,6 @@ workflows:
       - build/windows/x64/runner/Release/**
 
 
-  # ─────────────────────────────────────────────
-  #  BUILD ANDROID
-  # ─────────────────────────────────────────────
   android-release:
     name: Android Release
     max_build_duration: 60
@@ -89,9 +74,6 @@ workflows:
       - build/app/outputs/bundle/release/*.aab
 
 
-  # ─────────────────────────────────────────────
-  #  BUILD iOS
-  # ─────────────────────────────────────────────
   ios-release:
     name: iOS Release
     max_build_duration: 60
