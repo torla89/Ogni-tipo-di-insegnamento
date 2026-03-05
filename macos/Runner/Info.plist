@@ -5,7 +5,7 @@
 <dict>
 	<!-- Nome visualizzato sul Mac -->
 	<key>CFBundleName</key>
-	<string>Ogni tipo di insegnamento</string>
+	<string>Ogni tipo di insegnamento Mac</string>
 
 	<key>CFBundleIdentifier</key>
 	<string>com.torla.ogntiipodinsegnamento</string>

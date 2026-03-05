@@ -14,7 +14,7 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: "com.torla.ogntiipodinsegnamento"
-        APP_NAME: "Ogni tipo di insegnamento"
+        APP_NAME: "Ogni tipo di insegnamento Mac"
       # Aggiungi queste variabili nel pannello Codemagic (Environment variables):
       #   APP_STORE_CONNECT_ISSUER_ID
       #   APP_STORE_CONNECT_KEY_IDENTIFIER
