@@ -1,5 +1,8 @@
 workflows:
 
+  # ─────────────────────────────────────────────
+  #  BUILD MACOS
+  # ─────────────────────────────────────────────
   macos-release:
     name: macOS Release
     max_build_duration: 60
@@ -28,13 +31,18 @@ workflows:
 
       - name: Build macOS
         script: |
-          flutter build macos --release
+          flutter build macos --release \
+            --build-name=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1) \
+            --build-number=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f2)
 
     artifacts:
       - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
 
 
+  # ─────────────────────────────────────────────
+  #  BUILD WINDOWS
+  # ─────────────────────────────────────────────
   windows-release:
     name: Windows Release
     max_build_duration: 60
@@ -54,6 +62,9 @@ workflows:
       - build/windows/x64/runner/Release/**
 
 
+  # ─────────────────────────────────────────────
+  #  BUILD ANDROID
+  # ─────────────────────────────────────────────
   android-release:
     name: Android Release
     max_build_duration: 60
@@ -74,6 +85,9 @@ workflows:
       - build/app/outputs/bundle/release/*.aab
 
 
+  # ─────────────────────────────────────────────
+  #  BUILD iOS
+  # ─────────────────────────────────────────────
   ios-release:
     name: iOS Release
     max_build_duration: 60
@@ -95,4 +109,3 @@ workflows:
 
     artifacts:
       - build/ios/ipa/*.ipa
-
