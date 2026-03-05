@@ -6,7 +6,10 @@ workflows:
   macos-release:
     name: macOS Release
     max_build_duration: 60
-    instance_type: mac_mini_m1   # Mac virtuale su Codemagic
+    instance_type: mac_mini_m1
+
+    integrations:
+      app_store_connect: Codemagic    # nome dell'integrazione creata su Codemagic
 
     environment:
       flutter: stable
@@ -15,24 +18,12 @@ workflows:
       vars:
         BUNDLE_ID: "com.torla.ogntiipodinsegnamento"
         APP_NAME: "Ogni tipo di insegnamento Mac"
-      # Aggiungi queste variabili nel pannello Codemagic (Environment variables):
-      #   APP_STORE_CONNECT_ISSUER_ID
-      #   APP_STORE_CONNECT_KEY_IDENTIFIER
-      #   APP_STORE_CONNECT_PRIVATE_KEY
-      #   CERTIFICATE_PRIVATE_KEY
-      app_store_connect:
-        auth: integration   # usa l'integrazione App Store Connect di Codemagic
 
     scripts:
       - name: Abilita macOS in Flutter
         script: |
           flutter config --enable-macos-desktop
           flutter pub get
-
-      - name: Copia icona
-        script: |
-          cp macos/Runner/Assets.xcassets/AppIcon.appiconset/AppIcon.icns \
-             macos/Runner/Assets.xcassets/AppIcon.appiconset/ 2>/dev/null || true
 
       - name: Pod install
         script: |
@@ -42,27 +33,19 @@ workflows:
         script: |
           flutter build macos --release
 
-      - name: Firma e pacchettizza (Mac App Store)
-        script: |
-          APP_PATH="build/macos/Build/Products/Release/$APP_NAME.app"
-          xcrun altool --validate-app -f "$APP_PATH" -t macos \
-            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
-
     artifacts:
       - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
-      - "*.dmg"
 
     publishing:
       app_store_connect:
-        auth: integration
+        api_key: Codemagic
         submit_to_testflight: false
-        submit_to_app_store: false   # metti true quando sei pronto al rilascio
+        submit_to_app_store: false    # metti true quando sei pronto al rilascio
 
 
   # ─────────────────────────────────────────────
-  #  BUILD WINDOWS (già funzionante, per riferimento)
+  #  BUILD WINDOWS
   # ─────────────────────────────────────────────
   windows-release:
     name: Windows Release
@@ -93,8 +76,6 @@ workflows:
 
     environment:
       flutter: stable
-      android_signing:
-        - keystore_reference   # configura il keystore nel pannello Codemagic
 
     scripts:
       - name: Build Android
@@ -107,11 +88,6 @@ workflows:
       - build/app/outputs/flutter-apk/*.apk
       - build/app/outputs/bundle/release/*.aab
 
-    publishing:
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal   # oppure: alpha, beta, production
-
 
   # ─────────────────────────────────────────────
   #  BUILD iOS
@@ -121,24 +97,24 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m1
 
+    integrations:
+      app_store_connect: Codemagic    # nome dell'integrazione creata su Codemagic
+
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
-      app_store_connect:
-        auth: integration
 
     scripts:
       - name: Build iOS
         script: |
           flutter pub get
-          flutter build ipa --release \
-            --export-options-plist=/Users/builder/export_options.plist
+          flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
-        auth: integration
+        api_key: Codemagic
         submit_to_testflight: true
