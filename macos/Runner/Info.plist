@@ -1,32 +1,48 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIconFile</key>
-	<string></string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+	<!-- Nome visualizzato sul Mac -->
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
+	<string>Ogni tipo di insegnamento</string>
+
+	<key>CFBundleIdentifier</key>
+	<string>com.torla.ogntiipodinsegnamento</string>
+
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+
+	<!-- Versione minima macOS supportata -->
 	<key>LSMinimumSystemVersion</key>
-	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>$(PRODUCT_COPYRIGHT)</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
+	<string>10.14</string>
+
+	<!-- Impedisce che l'app appaia nel dock quando è in background -->
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+
+	<!-- Se l'app usa la fotocamera -->
+	<!-- <key>NSCameraUsageDescription</key>
+	<string>Questa app usa la fotocamera per...</string> -->
+
+	<!-- Se l'app usa il microfono -->
+	<!-- <key>NSMicrophoneUsageDescription</key>
+	<string>Questa app usa il microfono per...</string> -->
+
+	<!-- Se l'app accede ai file dell'utente -->
+	<!-- <key>NSDocumentsFolderUsageDescription</key>
+	<string>Questa app accede ai documenti per...</string> -->
 </dict>
 </plist>
