@@ -1,7 +1,7 @@
 workflows:
 
   # ─────────────────────────────────────────────
-  #  BUILD + UPLOAD macOS (App Store)
+  #  BUILD MACOS
   # ─────────────────────────────────────────────
   macos-release:
     name: macOS Release
@@ -20,7 +20,7 @@ workflows:
         APP_NAME: "Ogni tipo di insegnamento Mac"
 
     scripts:
-      - name: Enable macOS + dependencies
+      - name: Abilita macOS in Flutter
         script: |
           flutter config --enable-macos-desktop
           flutter pub get
@@ -29,21 +29,19 @@ workflows:
         script: |
           cd macos && pod install
 
-      - name: Archive macOS app (Xcode)
+      - name: Build macOS
         script: |
-          xcodebuild \
-            -workspace macos/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/macos/Runner.xcarchive \
-            archive
+          flutter build macos --release \
+            --build-name=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1) \
+            --build-number=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f2)
 
-      - name: Export PKG for App Store
+      - name: Crea PKG per App Store
         script: |
-          xcodebuild -exportArchive \
-            -archivePath build/macos/Runner.xcarchive \
-            -exportPath build/macos/pkg \
-            -exportOptionsPlist macos/ExportOptions.plist
+          APP_PATH="build/macos/Build/Products/Release/$APP_NAME.app"
+          PKG_PATH="build/macos/Build/Products/Release/$APP_NAME.pkg"
+          xcrun productbuild \
+            --component "$APP_PATH" /Applications \
+            "$PKG_PATH"
 
     artifacts:
       - build/macos/pkg/*.pkg
