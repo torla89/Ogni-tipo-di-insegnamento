@@ -1,30 +1,15 @@
-import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ogni_tipo_di_insegnamento/main.dart';
 
 void main() {
-  runApp(const OgniTipoDiInsegnamentoApp());
-}
+  testWidgets('App smoke test', (WidgetTester tester) async {
+    // Qui puoi usare const, perché il tuo costruttore è const.
+    await tester.pumpWidget(const OgniTipoDiInsegnamentoApp());
 
-class OgniTipoDiInsegnamentoApp extends StatelessWidget {
-  const OgniTipoDiInsegnamentoApp({super.key});
+    // Attendi che eventuali microtask/animazioni iniziali si stabilizzino.
+    await tester.pumpAndSettle();
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Ogni tipo di insegnamento',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1829E8),
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1829E8),
-          foregroundColor: Colors.white,
-          elevation: 8,
-        ),
-      ),
-      home: const HomeScreen(),
-    );
-  }
+    // Verifica che la root widget sia stata montata.
+    expect(find.byType(OgniTipoDiInsegnamentoApp), findsOneWidget);
+  });
 }
