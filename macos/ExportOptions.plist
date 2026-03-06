@@ -1,0 +1,18 @@
+xml version=1.0 encoding=UTF-8
+!DOCTYPE plist PUBLIC -AppleDTD PLIST 1.0EN
+  httpwww.apple.comDTDsPropertyList-1.0.dtd
+plist version=1.0
+dict
+  !-- Tipo di distribuzione --
+  keymethodkey
+  stringapp-storestring
+
+  !-- Firma automatica (consigliata su CI) --
+  keysigningStylekey
+  stringautomaticstring
+
+  !-- Piattaforma --
+  keydestinationkey
+  stringexportstring
+dict
+plist
