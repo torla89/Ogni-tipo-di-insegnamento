@@ -36,7 +36,6 @@ workflows:
 
       - name: Crea PKG per App Store
         script: |
-          # Trova automaticamente il file .app generato
           APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1 | head -1)
           echo "App trovata: $APP_PATH"
           PKG_PATH="build/macos/Build/Products/Release/app.pkg"
@@ -45,19 +44,17 @@ workflows:
             "$PKG_PATH"
           echo "PKG creato: $PKG_PATH"
 
+      - name: Pubblica su App Store Connect
+        script: |
+          PKG_PATH="build/macos/Build/Products/Release/app.pkg"
+          xcrun altool --upload-package "$PKG_PATH" \
+            --type macos \
+            --apiKey "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --verbose
+
     artifacts:
-      - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
-
-
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        key_id: $APP_STORE_CONNECT_KEY_ID
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: false
-        submit_to_app_store: false
-  
 
 
   # ─────────────────────────────────────────────
