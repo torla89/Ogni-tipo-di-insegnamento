@@ -39,11 +39,15 @@ workflows:
       - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
 
+
     publishing:
       app_store_connect:
-        api_key: Codemagic 2
+        api_key: $APP_STORE_CONNECT_API_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: false
         submit_to_app_store: false
+
 
 
   # ─────────────────────────────────────────────
@@ -118,6 +122,8 @@ workflows:
 
     publishing:
       app_store_connect:
-        api_key: Codemagic 2
+        api_key: $APP_STORE_CONNECT_API_KEY
+        key_id: $APP_STORE_CONNECT_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: false
         submit_to_app_store: false
