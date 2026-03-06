@@ -17,7 +17,6 @@ workflows:
       cocoapods: default
       vars:
         BUNDLE_ID: "com.torla.ogntiipodinsegnamento"
-        APP_NAME: "Ogni tipo di insegnamento Mac"
 
     scripts:
       - name: Abilita macOS in Flutter
@@ -37,14 +36,19 @@ workflows:
 
       - name: Crea PKG per App Store
         script: |
-          APP_PATH="build/macos/Build/Products/Release/$APP_NAME.app"
-          PKG_PATH="build/macos/Build/Products/Release/$APP_NAME.pkg"
+          # Trova automaticamente il file .app generato
+          APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1 | head -1)
+          echo "App trovata: $APP_PATH"
+          PKG_PATH="build/macos/Build/Products/Release/app.pkg"
           xcrun productbuild \
             --component "$APP_PATH" /Applications \
             "$PKG_PATH"
+          echo "PKG creato: $PKG_PATH"
 
     artifacts:
-      - build/macos/pkg/*.pkg
+      - build/macos/Build/Products/Release/*.app
+      - build/macos/Build/Products/Release/*.pkg
+
 
     publishing:
       app_store_connect:
@@ -53,6 +57,7 @@ workflows:
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_testflight: false
         submit_to_app_store: false
+  
 
 
   # ─────────────────────────────────────────────
