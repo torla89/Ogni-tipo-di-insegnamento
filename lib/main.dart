@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:ogni_tipo_di_insegnamento/screens/home_screen.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
 
-  testWidgets('Framework smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: SizedBox(),
-      ),
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Ogni Tipo Di Insegnamento',
+      debugShowCheckedModeBanner: false,
+      home: const HomeScreen(),
     );
-
-    await tester.pumpAndSettle();
-
-    expect(find.byType(MaterialApp), findsOneWidget);
-  });
+  }
 }
