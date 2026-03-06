@@ -44,5 +44,8 @@
 	<!-- Se l'app accede ai file dell'utente -->
 	<!-- <key>NSDocumentsFolderUsageDescription</key>
 	<string>Questa app accede ai documenti per...</string> -->
+
+	<key>LSApplicationCategoryType</key>
+    <string>public.app-category.education</string>
 </dict>
 </plist>
