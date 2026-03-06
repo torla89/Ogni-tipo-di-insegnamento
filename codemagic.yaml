@@ -24,6 +24,19 @@ workflows:
           flutter config --enable-macos-desktop
           flutter pub get
 
+      - name: Fetch certificati e profili
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --platform MAC_OS \
+            --type MAC_APP_STORE \
+            --create
+
+      - name: Installa certificati
+        script: |
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
+
       - name: Pod install
         script: |
           cd macos && pod install
@@ -34,29 +47,18 @@ workflows:
             --build-name=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f1) \
             --build-number=$(grep "^version:" pubspec.yaml | cut -d' ' -f2 | cut -d'+' -f2)
 
-      - name: Firma e crea PKG
+      - name: Crea PKG firmato
         script: |
           APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1 | head -1)
           echo "App trovata: $APP_PATH"
-          
-          # Firma l'app con il certificato Mac App Store
-          IDENTITY=$(security find-identity -v -p codesigning | grep "3rd Party Mac Developer Application" | head -1 | awk '{print $2}')
-          echo "Identity: $IDENTITY"
-          
-          codesign --deep --force --sign "$IDENTITY" \
-            --entitlements macos/Runner/Release.entitlements \
-            "$APP_PATH"
-          
-          # Crea il PKG firmato
+          PKG_PATH="build/macos/Build/Products/Release/app.pkg"
           PKG_IDENTITY=$(security find-identity -v | grep "3rd Party Mac Developer Installer" | head -1 | awk '{print $2}')
           echo "PKG Identity: $PKG_IDENTITY"
-          
-          PKG_PATH="build/macos/Build/Products/Release/app.pkg"
           xcrun productbuild \
             --component "$APP_PATH" /Applications \
             --sign "$PKG_IDENTITY" \
             "$PKG_PATH"
-          echo "PKG creato e firmato: $PKG_PATH"
+          echo "PKG creato: $PKG_PATH"
 
       - name: Pubblica su App Store Connect
         script: |
@@ -68,6 +70,7 @@ workflows:
             --verbose
 
     artifacts:
+      - build/macos/Build/Products/Release/*.app
       - build/macos/Build/Products/Release/*.pkg
 
 
