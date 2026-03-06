@@ -1,8 +1,5 @@
 workflows:
 
-  # ─────────────────────────────────────────────
-  #  BUILD MACOS
-  # ─────────────────────────────────────────────
   macos-release:
     name: macOS Release
     max_build_duration: 60
@@ -29,6 +26,7 @@ workflows:
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --platform MAC_OS \
             --type MAC_APP_STORE \
+            --certificate-key=@env:CERTIFICATE_PRIVATE_KEY \
             --create
 
       - name: Installa certificati
@@ -74,9 +72,6 @@ workflows:
       - build/macos/Build/Products/Release/*.pkg
 
 
-  # ─────────────────────────────────────────────
-  #  BUILD WINDOWS
-  # ─────────────────────────────────────────────
   windows-release:
     name: Windows Release
     max_build_duration: 60
@@ -96,9 +91,6 @@ workflows:
       - build/windows/x64/runner/Release/**
 
 
-  # ─────────────────────────────────────────────
-  #  BUILD ANDROID
-  # ─────────────────────────────────────────────
   android-release:
     name: Android Release
     max_build_duration: 60
@@ -119,9 +111,6 @@ workflows:
       - build/app/outputs/bundle/release/*.aab
 
 
-  # ─────────────────────────────────────────────
-  #  BUILD iOS
-  # ─────────────────────────────────────────────
   ios-release:
     name: iOS Release
     max_build_duration: 60
