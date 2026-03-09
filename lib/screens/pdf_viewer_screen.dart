@@ -39,7 +39,8 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         .replaceAll('Ò', 'O')
         .replaceAll('Ù', 'U')
         .replaceAll("'", '_')
-        .replaceAll(' ', '_');
+        .replaceAll(' ', '_')
+        .replaceAll(RegExp(r'[^a-zA-Z0-9_\.]'), '_');
   }
 
   @override
@@ -70,7 +71,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
       final docsDir = await getApplicationDocumentsDirectory();
 
-      // ✅ Sanitizza il nome rimuovendo accenti e caratteri speciali
       final nomeOriginale = widget.nomePdf.split('/').last;
       final nomeFile = _sanitizzaNome(nomeOriginale);
 
