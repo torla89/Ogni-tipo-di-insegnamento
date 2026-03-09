@@ -128,7 +128,7 @@ class DownloadScreen extends StatelessWidget {
 
                       // App Store
                       _buildStoreButton(
-                        onTap: () => _apriUrl('https://www.apple.com/it/app-store/'),
+                        onTap: () => _apriUrl('https://apps.apple.com/it/app/ogni-tipo-di-insegnamento/id6759931321'),
                         colore: const Color(0xFF1A1A1A),
                         child: const Row(
                           children: [

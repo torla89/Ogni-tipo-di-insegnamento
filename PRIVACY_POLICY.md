@@ -11,7 +11,7 @@ Il Titolare garantisce che il trattamento dei dati personali avviene nel rispett
 ## 2. Tipologie di dati trattati
 L’applicazione non raccoglie dati personali in modo automatico.
 
-L’unica forma di raccolta avviene tramite la sezione **“Contattaci”**, attraverso la quale l’utente può inviare segnalazioni o richieste.
+L’unica forma di raccolta avviene tramite la sezione **“Segnalazioni”**, attraverso la quale l’utente può inviare segnalazioni o richieste.
 
 I dati trattati sono esclusivamente:
 

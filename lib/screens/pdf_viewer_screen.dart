@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PdfViewerScreen extends StatefulWidget {
   final String nomePdf;
@@ -29,14 +31,42 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 
   Future<void> _apriPdf() async {
-    try {
-      // Copia il PDF dagli assets nella cache
-      final byteData = await rootBundle.load('assets/${widget.nomePdf}');
-      final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/${widget.nomePdf}');
-      await file.writeAsBytes(byteData.buffer.asUint8List());
+    if (kIsWeb) {
+      final url = Uri.parse(
+        'https://raw.githubusercontent.com/torla89/Ogni-tipo-di-insegnamento/main/assets/${widget.nomePdf}',
+      );
+      try {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+        if (mounted) Navigator.pop(context);
+      } catch (e) {
+        setState(() {
+          _errore = 'Impossibile aprire il PDF: $e';
+          _isLoading = false;
+        });
+      }
+      return;
+    }
 
-      // Apri con app esterna (Adobe, Google PDF, ecc.)
+    try {
+      final byteData = await rootBundle.load('assets/${widget.nomePdf}');
+
+      // ✅ Usa documenti invece di temp
+      final docsDir = await getApplicationDocumentsDirectory();
+
+      // ✅ Estrai solo il nome del file (rimuovi eventuali sottocartelle)
+      final nomeFile = widget.nomePdf.split('/').last;
+
+      final file = File('${docsDir.path}/$nomeFile');
+
+      // ✅ Cancella versione precedente potenzialmente corrotta
+      if (await file.exists()) await file.delete();
+
+      // ✅ flush:true forza la scrittura completa su disco prima di aprire
+      await file.writeAsBytes(
+        byteData.buffer.asUint8List(),
+        flush: true,
+      );
+
       final result = await OpenFilex.open(file.path, type: 'application/pdf');
 
       if (result.type != ResultType.done) {
@@ -45,7 +75,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           _isLoading = false;
         });
       } else {
-        // Torna indietro dopo aver aperto l'app esterna
         if (mounted) Navigator.pop(context);
       }
     } catch (e) {
