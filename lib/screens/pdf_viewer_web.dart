@@ -21,8 +21,9 @@ class _PdfWebViewerState extends State<PdfWebViewer> {
 
     final pdfUrl =
         'https://raw.githubusercontent.com/torla89/Ogni-tipo-di-insegnamento/main/assets/${widget.nomePdf}';
-    final pdfJsUrl =
-        'https://mozilla.github.io/pdf.js/web/viewer.html?file=${Uri.encodeComponent(pdfUrl)}';
+
+    // Usa PDF.js locale nella cartella web/pdfjs
+    final pdfJsUrl = '/pdfjs/web/viewer.html?file=${Uri.encodeComponent(pdfUrl)}';
 
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(_viewId, (int viewId) {

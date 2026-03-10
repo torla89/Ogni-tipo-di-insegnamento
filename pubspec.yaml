@@ -41,7 +41,7 @@ msix_config:
   identity_name: Ognitipodiinsegnamento.Ognitipodiinsegnamento
   publisher: CN=A14F0C55-60F5-46B6-A3F1-5759F59A12FC
   msix_version: 26.3.5.0
-  logo_path: assets\icona.ico
+  logo_path: assets\icona win.png
   store: true
 
 flutter:
