@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../data/categorie.dart';
 import 'categoria_screen.dart';
 import 'cerca_screen.dart';
@@ -38,7 +39,6 @@ class HomeScreen extends StatelessWidget {
             final altezzaBottone = isDesktop ? 48.0 : 44.0;
             final fontSize = isDesktop ? 13.0 : 14.0;
 
-            // Su desktop: 4 colonne con tutte le categorie + segnalazioni/download
             if (isDesktop) {
               final tutteLeVoci = <_VoceGriglia>[
                 ...categorieOrdinate.map((c) => _VoceGriglia(
@@ -91,15 +91,14 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   Center(child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 700),
-                    child: _buildCardAttenzione(),
+                    child: _buildCardSito(context),
                   )),
                   const SizedBox(height: 20),
                 ],
               );
             }
 
-            // Su mobile: 2 colonne con logica originale
-            final int numRighe = colonnaSinistra.length; // 22
+            final int numRighe = colonnaSinistra.length;
 
             return ListView(
               padding: EdgeInsets.symmetric(horizontal: paddingH, vertical: 10),
@@ -173,7 +172,7 @@ class HomeScreen extends StatelessWidget {
                 }),
 
                 const SizedBox(height: 12),
-                _buildCardAttenzione(),
+                _buildCardSito(context),
                 const SizedBox(height: 20),
               ],
             );
@@ -286,24 +285,44 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCardAttenzione() {
+  Widget _buildCardSito(BuildContext context) {
     return Card(
       color: const Color(0xCC000000),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 6,
       child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(children: [
-          Image.asset('assets/icona_di_attenzione_11924386.png',
-            width: 56, height: 56,
-            errorBuilder: (_, __, ___) =>
-                const Icon(Icons.warning, color: Colors.orange, size: 44)),
-          const SizedBox(width: 12),
-          const Expanded(child: Text(
-            'ATTENZIONE: nella sezione download troverete gratuitamente i link per scaricare l\'app per tutti i principali sistemi operativi',
-            style: TextStyle(color: Colors.white, fontSize: 12, height: 1.3),
-          )),
-        ]),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        child: GestureDetector(
+          onTap: () async {
+            final uri = Uri.parse('https://www.ognitipodiinsegnamento.it');
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          },
+          child: const Column(
+            children: [
+              Text(
+                'Visita il nostro sito',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'www.ognitipodiinsegnamento.it',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFFADD8E6),
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Color(0xFFADD8E6),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
