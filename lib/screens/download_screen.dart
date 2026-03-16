@@ -45,20 +45,154 @@ class DownloadScreen extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text(
-                        'DOWNLOAD\nUFFICIALI',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isDesktop ? 48 : 40,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFF5F0E8),
-                          height: 1.1,
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1A1A),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.language, color: Colors.white70, size: 32),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Visita il nostro sito',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFFF5F0E8),
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            GestureDetector(
+                              onTap: () => _apriUrl('https://www.ognitipodiinsegnamento.it'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4A90D9),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.language, color: Colors.white, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'www.ognitipodiinsegnamento.it',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       SizedBox(height: isDesktop ? 48 : 40),
 
-                      // Google Play — solo se NON è Apple
+                      // ── VERSIONE APPLE (iOS e macOS) ──
+                      if (_isApple) ...[
+                        // Messaggio sito
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1A1A1A),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.apple, color: Colors.white, size: 48),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Scarica l\'app per iPhone, iPad e Mac',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Visita il nostro sito per scaricare\nl\'app ufficiale per il tuo dispositivo Apple.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 14,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              GestureDetector(
+                                onTap: () => _apriUrl('https://www.ognitipodiinsegnamento.it'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF4A90D9),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.language, color: Colors.white, size: 20),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'www.ognitipodiinsegnamento.it',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Bottone PDF
+                        _buildStoreButton(
+                          onTap: () => _apriUrl('https://1drv.ms/u/s!As5zTqPS8veTh0RbiBMYrCdPjWwW?e=Bcm1zb'),
+                          colore: const Color(0xFFB33A1A),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.download, color: Colors.white, size: 40),
+                              SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Download',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('PDF',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      // ── VERSIONE NON APPLE (Android, Windows, Web) ──
                       if (!_isApple) ...[
+                        // Google Play
                         _buildStoreButton(
                           onTap: () => _apriUrl('https://play.google.com/store/apps/details?id=com.ognitipodiinsegnamento&pcampaignid=web_share'),
                           colore: const Color(0xFF1C2B2A),
@@ -90,10 +224,8 @@ class DownloadScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      // Microsoft Store — solo se NON è Apple
-                      if (!_isApple) ...[
+                        // Microsoft Store
                         _buildStoreButton(
                           onTap: () => _apriUrl('https://apps.microsoft.com/detail/9MZCZNDBLKPG?hl=it-it&gl=IT&ocid=pdpshare'),
                           colore: const Color(0xFF0A4E8A),
@@ -132,10 +264,8 @@ class DownloadScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      // App Store — solo se NON è Apple
-                      if (!_isApple) ...[
+                        // App Store iOS
                         _buildStoreButton(
                           onTap: () => _apriUrl('https://apps.apple.com/it/app/ogni-tipo-di-insegnamento/id6759931321'),
                           colore: const Color(0xFF1A1A1A),
@@ -156,43 +286,77 @@ class DownloadScreen extends StatelessWidget {
                                           color: Colors.white,
                                           fontSize: 24,
                                           fontWeight: FontWeight.bold)),
+                                  Text('per iPhone e iPad',
+                                      style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12)),
                                 ],
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      // Download PDF — sempre visibile
-                      _buildStoreButton(
-                        onTap: () => _apriUrl('https://1drv.ms/u/s!As5zTqPS8veTh0RbiBMYrCdPjWwW?e=Bcm1zb'),
-                        colore: const Color(0xFFB33A1A),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.download, color: Colors.white, size: 40),
-                            SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Download',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold)),
-                                Text('PDF',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14)),
-                              ],
-                            ),
-                          ],
+                        // Mac App Store
+                        _buildStoreButton(
+                          onTap: () => _apriUrl('https://apps.apple.com/it/app/ogni-tipo-di-insegnamento-pro/id6760140820?mt=12'),
+                          colore: const Color(0xFF2A2A2A),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.apple, color: Colors.white, size: 40),
+                              SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Download on the',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500)),
+                                  Text('Mac App Store',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('per Mac',
+                                      style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12)),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 16),
 
-                      // Link versioni vecchie — solo se NON è Apple
-                      if (!_isApple)
+                        // Download PDF
+                        _buildStoreButton(
+                          onTap: () => _apriUrl('https://1drv.ms/u/s!As5zTqPS8veTh0RbiBMYrCdPjWwW?e=Bcm1zb'),
+                          colore: const Color(0xFFB33A1A),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.download, color: Colors.white, size: 40),
+                              SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Download',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold)),
+                                  Text('PDF',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Link versioni vecchie
                         Builder(
                           builder: (context) => GestureDetector(
                             onTap: () => Navigator.push(context,
@@ -210,6 +374,9 @@ class DownloadScreen extends StatelessWidget {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 24),
+                      ],
+
                       const SizedBox(height: 24),
                     ],
                   ),
