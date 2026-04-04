@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PodcastScreen extends StatefulWidget {
   const PodcastScreen({super.key});
@@ -67,39 +70,43 @@ class _PodcastScreenState extends State<PodcastScreen> {
   Duration _posizione = Duration.zero;
   Duration _durata = Duration.zero;
 
+  bool get _isWindows => !kIsWeb && Platform.isWindows;
+
   @override
   void initState() {
     super.initState();
-    _player.playerStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = state.playing;
-          _isLoading = state.processingState == ProcessingState.loading ||
-              state.processingState == ProcessingState.buffering;
-        });
-      }
-    });
-    _player.positionStream.listen((pos) {
-      if (mounted) setState(() => _posizione = pos);
-    });
-    _player.durationStream.listen((dur) {
-      if (mounted) setState(() => _durata = dur ?? Duration.zero);
-    });
-    _player.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed && mounted) {
-        setState(() {
-          _isPlaying = false;
-          _posizione = Duration.zero;
-        });
-        _player.seek(Duration.zero);
-        _player.stop();
-      }
-    });
+    if (!_isWindows) {
+      _player.playerStateStream.listen((state) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = state.playing;
+            _isLoading = state.processingState == ProcessingState.loading ||
+                state.processingState == ProcessingState.buffering;
+          });
+        }
+      });
+      _player.positionStream.listen((pos) {
+        if (mounted) setState(() => _posizione = pos);
+      });
+      _player.durationStream.listen((dur) {
+        if (mounted) setState(() => _durata = dur ?? Duration.zero);
+      });
+      _player.processingStateStream.listen((state) {
+        if (state == ProcessingState.completed && mounted) {
+          setState(() {
+            _isPlaying = false;
+            _posizione = Duration.zero;
+          });
+          _player.seek(Duration.zero);
+          _player.stop();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _player.dispose();
+    if (!_isWindows) _player.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -122,6 +129,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Future<void> _riproduci(String filename) async {
+    // Su Windows apre nel player predefinito
+    if (_isWindows) {
+      final url = Uri.encodeFull(_baseUrl + filename);
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return;
+    }
+
     try {
       if (_podcastAttivo == filename) {
         if (_isPlaying) {
@@ -192,11 +206,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
               constraints: const BoxConstraints(maxWidth: 1200),
               child: Column(
                 children: [
-                  // Lista completamente scrollabile
                   Expanded(
                     child: CustomScrollView(
                       slivers: [
-                        // Intestazione e ricerca scrollabili
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -213,9 +225,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                     shadows: [
-                                      Shadow(
-                                          blurRadius: 6,
-                                          color: Colors.black54)
+                                      Shadow(blurRadius: 6, color: Colors.black54)
                                     ],
                                   ),
                                 ),
@@ -229,18 +239,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 TextField(
                                   controller: _controller,
                                   onChanged: _cerca,
-                                  style:
-                                  const TextStyle(color: Colors.white),
+                                  style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     hintText: 'Cerca podcast...',
-                                    hintStyle: const TextStyle(
-                                        color: Colors.white54),
-                                    prefixIcon: const Icon(Icons.search,
-                                        color: Colors.white70),
+                                    hintStyle: const TextStyle(color: Colors.white54),
+                                    prefixIcon: const Icon(Icons.search, color: Colors.white70),
                                     suffixIcon: _controller.text.isNotEmpty
                                         ? IconButton(
-                                      icon: const Icon(Icons.clear,
-                                          color: Colors.white70),
+                                      icon: const Icon(Icons.clear, color: Colors.white70),
                                       onPressed: () {
                                         _controller.clear();
                                         _cerca('');
@@ -248,15 +254,12 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     )
                                         : null,
                                     filled: true,
-                                    fillColor:
-                                    Colors.white.withOpacity(0.15),
+                                    fillColor: Colors.white.withOpacity(0.15),
                                     border: OutlineInputBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide.none,
                                     ),
-                                    contentPadding:
-                                    const EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 16),
                                   ),
                                 ),
@@ -265,31 +268,25 @@ class _PodcastScreenState extends State<PodcastScreen> {
                             ),
                           ),
                         ),
-
-                        // Lista podcast
                         _risultati.isEmpty
                             ? const SliverFillRemaining(
                           child: Center(
                             child: Text(
                               'Nessun risultato',
-                              style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 16),
+                              style: TextStyle(color: Colors.white60, fontSize: 16),
                             ),
                           ),
                         )
                             : SliverPadding(
                           padding: EdgeInsets.fromLTRB(
-                              16, 0, 16, _podcastAttivo != null ? 8 : 24),
+                              16, 0, 16, _podcastAttivo != null && !_isWindows ? 8 : 24),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                 final podcast = _risultati[index];
-                                final isAttivo =
-                                    _podcastAttivo == podcast;
+                                final isAttivo = _podcastAttivo == podcast;
                                 return Padding(
-                                  padding:
-                                  const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.only(bottom: 6),
                                   child: SizedBox(
                                     height: 52,
                                     child: ElevatedButton.icon(
@@ -297,8 +294,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                           ? const SizedBox(
                                         width: 20,
                                         height: 20,
-                                        child:
-                                        CircularProgressIndicator(
+                                        child: CircularProgressIndicator(
                                           color: Colors.white,
                                           strokeWidth: 2,
                                         ),
@@ -315,32 +311,24 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                         style: TextStyle(
                                           fontSize: fontSize,
                                           color: Colors.white,
-                                          fontWeight: isAttivo
+                                          fontWeight: isAttivo && !_isWindows
                                               ? FontWeight.bold
                                               : FontWeight.normal,
                                         ),
-                                        overflow:
-                                        TextOverflow.ellipsis,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isAttivo
-                                            ? const Color(0xFF4A0072)
-                                            .withOpacity(0.95)
-                                            : const Color(0xFF7B1FA2)
-                                            .withOpacity(0.88),
+                                        backgroundColor: isAttivo && !_isWindows
+                                            ? const Color(0xFF4A0072).withOpacity(0.95)
+                                            : const Color(0xFF7B1FA2).withOpacity(0.88),
                                         foregroundColor: Colors.white,
-                                        elevation: isAttivo ? 8 : 4,
+                                        elevation: isAttivo && !_isWindows ? 8 : 4,
                                         alignment: Alignment.center,
-                                        padding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
                                         shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                            BorderRadius.circular(
-                                                12)),
+                                            borderRadius: BorderRadius.circular(12)),
                                       ),
-                                      onPressed: () =>
-                                          _riproduci(podcast),
+                                      onPressed: () => _riproduci(podcast),
                                     ),
                                   ),
                                 );
@@ -353,8 +341,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                     ),
                   ),
 
-                  // Mini player fisso in fondo
-                  if (_podcastAttivo != null)
+                  // Mini player — solo su non-Windows
+                  if (_podcastAttivo != null && !_isWindows)
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF2D0045).withOpacity(0.97),
@@ -385,10 +373,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           SliderTheme(
                             data: SliderTheme.of(context).copyWith(
                               trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(
-                                  enabledThumbRadius: 6),
-                              overlayShape: const RoundSliderOverlayShape(
-                                  overlayRadius: 12),
+                              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                               activeTrackColor: const Color(0xFFCE93D8),
                               inactiveTrackColor: Colors.white24,
                               thumbColor: Colors.white,
@@ -405,8 +391,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                   ? _durata.inMilliseconds.toDouble()
                                   : 1,
                               onChanged: (val) {
-                                _player.seek(
-                                    Duration(milliseconds: val.toInt()));
+                                _player.seek(Duration(milliseconds: val.toInt()));
                               },
                             ),
                           ),
@@ -414,19 +399,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
                             children: [
                               Text(
                                 _formatDuration(_posizione),
-                                style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
+                                style: const TextStyle(color: Colors.white60, fontSize: 11),
                               ),
                               const Spacer(),
                               IconButton(
-                                icon: const Icon(Icons.replay_10,
-                                    color: Colors.white70, size: 26),
+                                icon: const Icon(Icons.replay_10, color: Colors.white70, size: 26),
                                 onPressed: () {
-                                  final newPos = _posizione -
-                                      const Duration(seconds: 10);
-                                  _player.seek(newPos < Duration.zero
-                                      ? Duration.zero
-                                      : newPos);
+                                  final newPos = _posizione - const Duration(seconds: 10);
+                                  _player.seek(newPos < Duration.zero ? Duration.zero : newPos);
                                 },
                               ),
                               _isLoading
@@ -455,21 +435,16 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 },
                               ),
                               IconButton(
-                                icon: const Icon(Icons.forward_10,
-                                    color: Colors.white70, size: 26),
+                                icon: const Icon(Icons.forward_10, color: Colors.white70, size: 26),
                                 onPressed: () {
-                                  final newPos = _posizione +
-                                      const Duration(seconds: 10);
-                                  if (newPos < _durata) {
-                                    _player.seek(newPos);
-                                  }
+                                  final newPos = _posizione + const Duration(seconds: 10);
+                                  if (newPos < _durata) _player.seek(newPos);
                                 },
                               ),
                               const Spacer(),
                               Text(
                                 _formatDuration(_durata),
-                                style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
+                                style: const TextStyle(color: Colors.white60, fontSize: 11),
                               ),
                             ],
                           ),

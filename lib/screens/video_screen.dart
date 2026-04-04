@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 
@@ -15,18 +18,28 @@ class _VideoScreenState extends State<VideoScreen> {
   bool _isLoading = true;
   bool _hasError = false;
 
+  static const String _videoUrl =
+      'https://archive.org/download/ellero-balzani-conversione/Ellero%20Balzani%20-%20conversione.mp4';
+
+  bool get _isWindows => !kIsWeb && Platform.isWindows;
+
   @override
   void initState() {
     super.initState();
-    _inizializzaVideo();
+    if (_isWindows) {
+      // Su Windows apre nel player predefinito e torna indietro
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await launchUrl(Uri.parse(_videoUrl), mode: LaunchMode.externalApplication);
+        if (mounted) Navigator.pop(context);
+      });
+    } else {
+      _inizializzaVideo();
+    }
   }
 
   Future<void> _inizializzaVideo() async {
     try {
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(
-            'https://archive.org/download/ellero-balzani-conversione/Ellero%20Balzani%20-%20conversione.mp4'),
-      );
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(_videoUrl));
       await _videoController.initialize();
       _chewieController = ChewieController(
         videoPlayerController: _videoController,
@@ -58,13 +71,24 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   void dispose() {
-    _videoController.dispose();
-    _chewieController?.dispose();
+    if (!_isWindows) {
+      _videoController.dispose();
+      _chewieController?.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isWindows) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -94,8 +118,7 @@ class _VideoScreenState extends State<VideoScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline,
-                color: Colors.white70, size: 48),
+            Icon(Icons.error_outline, color: Colors.white70, size: 48),
             SizedBox(height: 16),
             Text(
               'Errore nel caricamento del video.',
