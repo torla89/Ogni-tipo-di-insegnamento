@@ -3,7 +3,6 @@
   "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Nome visualizzato sul Mac -->
 	<key>CFBundleName</key>
 	<string>Ogni tipo di insegnamento Pro</string>
 
@@ -25,7 +24,6 @@
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 
-	<!-- Lingua primaria italiana -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>it</string>
 
@@ -34,12 +32,14 @@
 		<string>it</string>
 	</array>
 
-	<!-- Versione minima macOS supportata -->
 	<key>LSMinimumSystemVersion</key>
 	<string>10.14</string>
 
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Questa app utilizza il microfono per la riproduzione audio dei podcast.</string>
 
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.education</string>
