@@ -25,9 +25,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('it'),
-      ],
+      supportedLocales: const [Locale('it')],
       locale: const Locale('it'),
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -42,7 +40,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: false,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }

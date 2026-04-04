@@ -25,27 +25,23 @@
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 
+	<!-- Lingua primaria italiana -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>it</string>
+
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>it</string>
+	</array>
+
 	<!-- Versione minima macOS supportata -->
 	<key>LSMinimumSystemVersion</key>
 	<string>10.14</string>
 
-	<!-- Impedisce che l'app appaia nel dock quando è in background -->
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 
-	<!-- Se l'app usa la fotocamera -->
-	<!-- <key>NSCameraUsageDescription</key>
-	<string>Questa app usa la fotocamera per...</string> -->
-
-	<!-- Se l'app usa il microfono -->
-	<!-- <key>NSMicrophoneUsageDescription</key>
-	<string>Questa app usa il microfono per...</string> -->
-
-	<!-- Se l'app accede ai file dell'utente -->
-	<!-- <key>NSDocumentsFolderUsageDescription</key>
-	<string>Questa app accede ai documenti per...</string> -->
-
 	<key>LSApplicationCategoryType</key>
-    <string>public.app-category.education</string>
+	<string>public.app-category.education</string>
 </dict>
 </plist>

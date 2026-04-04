@@ -2,6 +2,34 @@ import 'package:flutter/material.dart';
 import '../data/categorie.dart';
 import 'pdf_viewer_screen.dart';
 
+String _titoloVisualizzato(String titolo) {
+  const Map<String, String> override = {
+    'chiedere perdono o confessare il peccato': 'chiedere perdono o confessare il peccato?',
+    'cosa vorresti che fosse scritto sulla tua epigrafe': 'cosa vorresti che fosse scritto sulla tua epigrafe?',
+    'credenti o discepoli': 'credenti o discepoli?',
+    'Perché la legge': 'Perché la legge?',
+    'sono io chiamato a predicare': 'sono io chiamato a predicare?',
+    'Chi può rimettere i peccati': 'Chi può rimettere i peccati?',
+    'Chi sono i pagani': 'Chi sono i pagani?',
+    'Di che cosa hai paura': 'Di che cosa hai paura?',
+    'dove era il codice stradale': 'dove era il codice stradale?',
+    'perché predicare il vangelo se gli uomini sono salvati senza': 'perché predicare il vangelo se gli uomini sono salvati senza?',
+    'Fede sì, ma in che cosa': 'Fede sì, ma in che cosa?',
+    'Dio mio, Dio mio, perchè mi hai abbandonato': 'Dio mio, Dio mio, perchè mi hai abbandonato?',
+    'e se Gesù non fosse risorto': 'e se Gesù non fosse risorto?',
+    'gesù si idenfica con JHWH oppure lo è': 'gesù si idenfica con JHWH oppure lo è?',
+    'Perché servire Dio': 'Perché servire Dio?',
+    'l\'unione degli omosessuali è naturale': 'l\'unione degli omosessuali è naturale?',
+    'L\'unione dei gay è un matrimonio': 'L\'unione dei gay è un matrimonio?',
+    'Ma perché quell\'uno lo fece': 'Ma perché quell\'uno lo fece?',
+    'Non ti basta il Signore': 'Non ti basta il Signore?',
+    'nudo integrale si o no': 'nudo integrale si o no?',
+    'Sposi vinti o convinti': 'Sposi vinti o convinti?',
+    'Spirito Santo o spirito maligno': 'Spirito Santo o spirito maligno?',
+  };
+  return override[titolo] ?? titolo;
+}
+
 class CercaScreen extends StatefulWidget {
   const CercaScreen({super.key});
 
@@ -36,6 +64,7 @@ class _CercaScreenState extends State<CercaScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text('Cerca per parole chiave')),
       body: Container(
         decoration: const BoxDecoration(
@@ -52,7 +81,6 @@ class _CercaScreenState extends State<CercaScreen> {
 
             return Column(
               children: [
-                // Campo ricerca
                 Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: maxWidth),
@@ -76,85 +104,82 @@ class _CercaScreenState extends State<CercaScreen> {
                     ),
                   ),
                 ),
-
-                // Risultati
                 Expanded(
                   child: _risultati.isEmpty
                       ? Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              _controller.text.isEmpty
-                                  ? 'Digita per cercare'
-                                  : 'Nessun risultato',
-                              style: const TextStyle(
-                                  fontSize: 16, color: Colors.white),
-                            ),
-                          ),
-                        )
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _controller.text.isEmpty
+                            ? 'Digita per cercare'
+                            : 'Nessun risultato',
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  )
                       : Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(maxWidth: maxWidth),
-                            child: ListView.builder(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: paddingH, vertical: 4),
-                              itemCount: _risultati.length,
-                              itemBuilder: (context, index) {
-                                final r = _risultati[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 4),
-                                  child: SizedBox(
-                                    height: isDesktop ? 52 : 56,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFF1829E8),
-                                        foregroundColor: Colors.white,
-                                        elevation: 3,
-                                        alignment: Alignment.centerLeft,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
-                                      ),
-                                      onPressed: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => PdfViewerScreen(
-                                            nomePdf: r.voce.nomePdf,
-                                            titolo: r.voce.titolo,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(r.voce.titolo.toUpperCase(),
-                                              style: TextStyle(
-                                                  fontSize:
-                                                      isDesktop ? 14 : 14,
-                                                  fontWeight:
-                                                      FontWeight.bold)),
-                                          Text(r.categoria.toUpperCase(),
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.white70)),
-                                        ],
-                                      ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: ListView.builder(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: paddingH, vertical: 4),
+                        itemCount: _risultati.length,
+                        itemBuilder: (context, index) {
+                          final r = _risultati[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: SizedBox(
+                              height: isDesktop ? 52 : 56,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                  const Color(0xFF1829E8),
+                                  foregroundColor: Colors.white,
+                                  elevation: 3,
+                                  alignment: Alignment.centerLeft,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                      BorderRadius.circular(12)),
+                                ),
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => PdfViewerScreen(
+                                      nomePdf: r.voce.nomePdf,
+                                      titolo: r.voce.titolo,
                                     ),
                                   ),
-                                );
-                              },
+                                ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                        _titoloVisualizzato(r.voce.titolo).toUpperCase(),
+                                        style: TextStyle(
+                                            fontSize: isDesktop ? 14 : 14,
+                                            fontWeight: FontWeight.bold)),
+                                    Text(r.categoria.toUpperCase(),
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white70)),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ),
               ],
             );
