@@ -19,8 +19,7 @@ class _PdfWebViewerState extends State<PdfWebViewer> {
     super.initState();
     _viewId = 'pdf-iframe-${widget.nomePdf.hashCode}';
 
-    final pdfUrl =
-        'https://raw.githubusercontent.com/torla89/Ogni-tipo-di-insegnamento/main/assets/${widget.nomePdf}';
+    final pdfUrl = '/assets/assets/${widget.nomePdf.replaceAll(' ', '%20')}';
 
     // Usa PDF.js locale nella cartella web/pdfjs
     final pdfJsUrl = '/pdfjs/web/viewer.html?file=${Uri.encodeComponent(pdfUrl)}';
