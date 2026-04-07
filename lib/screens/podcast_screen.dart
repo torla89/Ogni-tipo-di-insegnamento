@@ -71,11 +71,12 @@ class _PodcastScreenState extends State<PodcastScreen> {
   Duration _durata = Duration.zero;
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
+  bool get _useExternalPlayer => kIsWeb || _isWindows;
 
   @override
   void initState() {
     super.initState();
-    if (!_isWindows) {
+    if (!_useExternalPlayer) {
       _player.playerStateStream.listen((state) {
         if (mounted) {
           setState(() {
@@ -106,7 +107,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   @override
   void dispose() {
-    if (!_isWindows) _player.dispose();
+    if (!_useExternalPlayer) _player.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -129,8 +130,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Future<void> _riproduci(String filename) async {
-    // Su Windows apre nel player predefinito
-    if (_isWindows) {
+    if (_useExternalPlayer) {
       final url = Uri.encodeFull(_baseUrl + filename);
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
@@ -279,7 +279,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                         )
                             : SliverPadding(
                           padding: EdgeInsets.fromLTRB(
-                              16, 0, 16, _podcastAttivo != null && !_isWindows ? 8 : 24),
+                              16, 0, 16, _podcastAttivo != null && !_useExternalPlayer ? 8 : 24),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                                   (context, index) {
@@ -290,7 +290,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                   child: SizedBox(
                                     height: 52,
                                     child: ElevatedButton.icon(
-                                      icon: isAttivo && _isLoading
+                                      icon: isAttivo && _isLoading && !_useExternalPlayer
                                           ? const SizedBox(
                                         width: 20,
                                         height: 20,
@@ -300,7 +300,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                         ),
                                       )
                                           : Icon(
-                                          isAttivo && _isPlaying
+                                          isAttivo && _isPlaying && !_useExternalPlayer
                                               ? Icons.pause_circle_outline_rounded
                                               : Icons.play_circle_outline_rounded,
                                           size: 20,
@@ -311,18 +311,18 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                         style: TextStyle(
                                           fontSize: fontSize,
                                           color: Colors.white,
-                                          fontWeight: isAttivo && !_isWindows
+                                          fontWeight: isAttivo && !_useExternalPlayer
                                               ? FontWeight.bold
                                               : FontWeight.normal,
                                         ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isAttivo && !_isWindows
+                                        backgroundColor: isAttivo && !_useExternalPlayer
                                             ? const Color(0xFF4A0072).withOpacity(0.95)
                                             : const Color(0xFF7B1FA2).withOpacity(0.88),
                                         foregroundColor: Colors.white,
-                                        elevation: isAttivo && !_isWindows ? 8 : 4,
+                                        elevation: isAttivo && !_useExternalPlayer ? 8 : 4,
                                         alignment: Alignment.center,
                                         padding: const EdgeInsets.symmetric(horizontal: 16),
                                         shape: RoundedRectangleBorder(
@@ -341,8 +341,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                     ),
                   ),
 
-                  // Mini player — solo su non-Windows
-                  if (_podcastAttivo != null && !_isWindows)
+                  // Mini player — solo su non-web e non-Windows
+                  if (_podcastAttivo != null && !_useExternalPlayer)
                     Container(
                       decoration: BoxDecoration(
                         color: const Color(0xFF2D0045).withOpacity(0.97),

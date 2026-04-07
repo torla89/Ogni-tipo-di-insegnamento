@@ -22,12 +22,12 @@ class _VideoScreenState extends State<VideoScreen> {
       'https://archive.org/download/ellero-balzani-conversione/Ellero%20Balzani%20-%20conversione.mp4';
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
+  bool get _useExternalPlayer => kIsWeb || _isWindows;
 
   @override
   void initState() {
     super.initState();
-    if (_isWindows) {
-      // Su Windows apre nel player predefinito e torna indietro
+    if (_useExternalPlayer) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await launchUrl(Uri.parse(_videoUrl), mode: LaunchMode.externalApplication);
         if (mounted) Navigator.pop(context);
@@ -71,7 +71,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   void dispose() {
-    if (!_isWindows) {
+    if (!_useExternalPlayer) {
       _videoController.dispose();
       _chewieController?.dispose();
     }
@@ -80,7 +80,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isWindows) {
+    if (_useExternalPlayer) {
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(
