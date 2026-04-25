@@ -219,17 +219,22 @@ class HomeScreen extends StatelessWidget {
         onPressed: onTap,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icona, size: 20, color: Colors.white),
             const SizedBox(width: 8),
-            Text(
-              titolo,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 0.5,
+            Flexible(
+              child: Text(
+                titolo,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.visible,
+                softWrap: true,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
               ),
             ),
           ],

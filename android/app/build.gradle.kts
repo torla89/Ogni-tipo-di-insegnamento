@@ -32,8 +32,8 @@ android {
         applicationId = "com.ognitipodiinsegnamento"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = 27
-        versionName = "26.04.01"
+        versionCode = 28
+        versionName = "26.04.02"
     }
 
     buildTypes {
@@ -51,4 +51,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.media:media:1.7.0")
 }
