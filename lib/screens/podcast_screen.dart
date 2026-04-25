@@ -72,6 +72,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
   MethodChannel('com.ognitipodiinsegnamento/audio_service');
   static const _playerControlChannel =
   MethodChannel('com.ognitipodiinsegnamento/player_control');
+  static const _nowPlayingChannel =
+  MethodChannel('com.ognitipodiinsegnamento/nowplaying');
 
   final TextEditingController _controller = TextEditingController();
   final AudioPlayer _player = AudioPlayer();
@@ -87,6 +89,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
   bool get _useExternalPlayer => kIsWeb || _isWindows;
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
+  bool get _isMacOS => !kIsWeb && Platform.isMacOS;
 
   @override
   void initState() {
@@ -102,6 +106,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
             break;
           case 'pause':
             await _player.pause();
+            break;
+          case 'togglePlayPause':
+            if (_isPlaying) {
+              await _player.pause();
+            } else {
+              await _player.play();
+            }
             break;
           case 'seekTo':
             final posMs = call.arguments as int?;
@@ -122,6 +133,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
           });
           if (state.playing != wasPlaying && _podcastAttivo != null) {
             _aggiornaService(_displayName(_podcastAttivo!), state.playing);
+            _aggiornaNowPlaying(_displayName(_podcastAttivo!), state.playing);
           }
         }
       });
@@ -133,7 +145,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
           if (now.difference(_ultimoAggiornaPosizioneService).inSeconds >= 5 &&
               _podcastAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
-            _aggiornaPosizioneService(pos, _durata);
+            if (!kIsWeb && Platform.isAndroid) {
+              _aggiornaPosizioneService(pos, _durata);
+            }
+            _aggiornaNowPlaying(_displayName(_podcastAttivo!), _isPlaying);
           }
         }
       });
@@ -151,6 +166,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
           _player.seek(Duration.zero);
           _player.stop();
           _fermaService();
+          if (_isIOS || _isMacOS) {
+            _nowPlayingChannel.invokeMethod('clear');
+          }
         }
       });
     }
@@ -209,6 +227,20 @@ class _PodcastScreenState extends State<PodcastScreen> {
     }
   }
 
+  Future<void> _aggiornaNowPlaying(String titolo, bool isPlaying) async {
+    if (!(_isIOS || _isMacOS)) return;
+    try {
+      await _nowPlayingChannel.invokeMethod('update', {
+        'title': titolo,
+        'isPlaying': isPlaying,
+        'positionMs': _posizione.inMilliseconds,
+        'durationMs': _durata.inMilliseconds,
+      });
+    } catch (e) {
+      debugPrint('Errore NowPlaying: $e');
+    }
+  }
+
   Future<void> _fermaService() async {
     try {
       await _audioServiceChannel.invokeMethod('stopService');
@@ -220,7 +252,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
   Future<void> _scaricaPodcast(String filename) async {
     if (kIsWeb) return;
 
-    if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
+    if (_isIOS || _isMacOS) {
       final url = Uri.encodeFull(_baseUrl + filename);
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
@@ -253,6 +285,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
   void dispose() {
     if (!_useExternalPlayer) {
       _fermaService();
+      if (_isIOS || _isMacOS) {
+        _nowPlayingChannel.invokeMethod('clear');
+      }
       _player.dispose();
     }
     _controller.dispose();
@@ -299,9 +334,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
         _durata = Duration.zero;
       });
       final url = Uri.encodeFull(_baseUrl + filename);
-      await _avviaService(_displayName(filename));
+      if (!(_isIOS || _isMacOS)) {
+        await _avviaService(_displayName(filename));
+      }
       await _player.setUrl(url);
       await _player.play();
+      if (_isIOS || _isMacOS) {
+        await _aggiornaNowPlaying(_displayName(filename), true);
+      }
     } catch (e, stack) {
       debugPrint('ERRORE RIPRODUZIONE: $e');
       debugPrint('STACK: $stack');
