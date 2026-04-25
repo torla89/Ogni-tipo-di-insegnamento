@@ -218,6 +218,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Future<void> _scaricaPodcast(String filename) async {
+    if (kIsWeb) return;
+
+    if (!kIsWeb && (Platform.isIOS || Platform.isMacOS)) {
+      final url = Uri.encodeFull(_baseUrl + filename);
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      return;
+    }
+
     if (_downloadInCorso.contains(filename)) return;
     setState(() => _downloadInCorso.add(filename));
     try {
@@ -462,7 +470,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                             : 0.88),
                                         child: Row(
                                           children: [
-                                            // Bottone play
                                             Expanded(
                                               child: InkWell(
                                                 onTap: () =>
@@ -535,13 +542,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 ),
                                               ),
                                             ),
-                                            // Separatore
                                             Container(
                                               width: 1,
                                               height: 28,
                                               color: Colors.white24,
                                             ),
-                                            // Bottone download
                                             InkWell(
                                               onTap: isDownloading
                                                   ? null
