@@ -35,7 +35,8 @@ class AudioServiceChannel(private val context: Context) : MethodChannel.MethodCa
                 val title = call.argument<String>("title") ?: ""
                 val isPlaying = call.argument<Boolean>("isPlaying") ?: true
                 val serviceIntent = Intent(context, AudioPlayerService::class.java).apply {
-                    action = if (isPlaying) AudioPlayerService.ACTION_PLAY else AudioPlayerService.ACTION_PAUSE
+                    action = if (isPlaying) AudioPlayerService.ACTION_PLAY
+                    else AudioPlayerService.ACTION_PAUSE
                     putExtra(AudioPlayerService.EXTRA_TITLE, title)
                     putExtra(AudioPlayerService.EXTRA_IS_PLAYING, isPlaying)
                 }
@@ -67,8 +68,10 @@ class AudioServiceChannel(private val context: Context) : MethodChannel.MethodCa
                 val request = DownloadManager.Request(Uri.parse(url))
                     .setTitle(title)
                     .setDescription("Download podcast")
-                    .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                    .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
+                    .setNotificationVisibility(
+                        DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    .setDestinationInExternalPublicDir(
+                        Environment.DIRECTORY_DOWNLOADS, filename)
                     .setAllowedOverMetered(true)
                     .setAllowedOverRoaming(true)
                 val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
