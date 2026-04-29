@@ -37,6 +37,12 @@ class AudioPlayerService : Service() {
     private var currentPositionMs: Long = 0L
     private var currentDurationMs: Long = 0L
 
+    private val allPlayerChannels = listOf(
+        "com.ognitipodiinsegnamento/player_control",
+        "com.ognitipodiinsegnamento/player_control_studi",
+        "com.ognitipodiinsegnamento/player_control_cerca"
+    )
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -70,10 +76,10 @@ class AudioPlayerService : Service() {
                     if (ignoraCallbackMediaSession) return
                     val engine = MainActivity.flutterEngine ?: return
                     android.os.Handler(mainLooper).post {
-                        MethodChannel(
-                            engine.dartExecutor.binaryMessenger,
-                            MainActivity.PLAYER_CHANNEL
-                        ).invokeMethod("seekTo", pos)
+                        val messenger = engine.dartExecutor.binaryMessenger
+                        for (channel in allPlayerChannels) {
+                            MethodChannel(messenger, channel).invokeMethod("seekTo", pos)
+                        }
                     }
                     currentPositionMs = pos
                     updateMediaSession(currentTitle, isCurrentlyPlaying, pos, currentDurationMs)
@@ -92,10 +98,10 @@ class AudioPlayerService : Service() {
     private fun sendToFlutter(action: String) {
         val engine = MainActivity.flutterEngine ?: return
         android.os.Handler(mainLooper).post {
-            MethodChannel(
-                engine.dartExecutor.binaryMessenger,
-                MainActivity.PLAYER_CHANNEL
-            ).invokeMethod(action, null)
+            val messenger = engine.dartExecutor.binaryMessenger
+            for (channel in allPlayerChannels) {
+                MethodChannel(messenger, channel).invokeMethod(action, null)
+            }
         }
     }
 
@@ -195,7 +201,6 @@ class AudioPlayerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Large icon con il logo dell'app
         val largeIcon = BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
@@ -225,7 +230,7 @@ class AudioPlayerService : Service() {
                 "Riproduzione audio",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Notifica riproduzione podcast"
+                description = "Notifica riproduzione audio"
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
