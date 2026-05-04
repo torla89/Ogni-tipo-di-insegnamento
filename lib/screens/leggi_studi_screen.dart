@@ -25,7 +25,7 @@ class LeggiStudiScreen extends StatefulWidget {
 
 class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
   static const String _baseUrl =
-      'https://archive.org/download/jhwh-1-1-f-a_202604/';
+      'https://archive.org/download/ogni-tipo-di-insegnamento-letture-fixed/';
 
   static const _audioServiceChannel =
   MethodChannel('com.ognitipodiinsegnamento/audio_service');
