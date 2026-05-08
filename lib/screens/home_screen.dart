@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'studi_screen.dart';
 import 'podcast_screen.dart';
@@ -344,17 +345,58 @@ class _HomeScreenState extends State<HomeScreen> {
                               _buildIconaLink(
                                 icona: Icons.language,
                                 etichetta: 'Sito web',
-                                url:
-                                'https://www.ognitipodiinsegnamento.it',
+                                url: 'https://www.ognitipodiinsegnamento.it',
                               ),
-                              const SizedBox(width: 32),
+                              const SizedBox(width: 24),
                               _buildIconaLink(
                                 icona: Icons.facebook,
                                 etichetta: 'Facebook',
-                                url:
-                                'https://www.facebook.com/profile.php?id=61584977437002',
+                                url: 'https://www.facebook.com/profile.php?id=61584977437002',
                               ),
-                              const SizedBox(width: 32),
+                              const SizedBox(width: 24),
+                              // Bottone Spotify con icona FontAwesome
+                              GestureDetector(
+                                onTap: () async {
+                                  final uri = Uri.parse(
+                                      'https://open.spotify.com/show/7fPC8f6ivOjpRcMezYN6Fp?si=N3QOyVT1TI6VqEqx0yYNIg');
+                                  await launchUrl(uri,
+                                      mode: LaunchMode.externalApplication);
+                                },
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 52,
+                                      height: 52,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withOpacity(0.15),
+                                        borderRadius:
+                                        BorderRadius.circular(14),
+                                        border: Border.all(
+                                            color: Colors.white30,
+                                            width: 1),
+                                      ),
+                                      child: const Center(
+                                        child: FaIcon(
+                                          FontAwesomeIcons.spotify,
+                                          color: Colors.white,
+                                          size: 26,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    const Text(
+                                      'Spotify',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                        letterSpacing: 0.3,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 24),
                               GestureDetector(
                                 onTap: () => _apriChangelog(),
                                 child: Column(

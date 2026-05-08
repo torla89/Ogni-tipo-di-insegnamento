@@ -1,5 +1,13 @@
 [
   {
+    "versione": "26.05.04",
+    "data": "Maggio 2026",
+    "novita": [
+      "Aggiunto bottone spotify nella homepage",
+      "Sistemato la sezione podcast"
+    ]
+  },
+  {
     "versione": "26.05.03+33",
     "data": "Maggio 2026",
     "novita": [
@@ -58,7 +66,7 @@
     ]
   },
   {
-    "versione": "24.02.04",
+    "versione": "26.02.04",
     "data": "Febbraio 2026",
     "novita": [
       "Lettura PDF mediante app esterna",

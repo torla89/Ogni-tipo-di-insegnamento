@@ -15,57 +15,86 @@ class PodcastScreen extends StatefulWidget {
 
 class _PodcastScreenState extends State<PodcastScreen> {
   static const String _baseUrl =
-      'https://archive.org/download/ogni-tipo-di-insegnamento-podcast/';
+      'https://archive.org/download/podcast_revisionati/';
 
   static const List<String> _podcast = [
-    'Chi non e con Cristo.mp3',
-    'Credente o Cristiano.mp3',
+    'Chi non è con Cristo.mp3',
+    'Credente o Cristiano - Parte 1 di 4.mp3',
+    'Credente o Cristiano - Parte 2 di 4.mp3',
+    'Credente o Cristiano - Parte 3 di 4.mp3',
+    'Credente o Cristiano - Parte 4 di 4.mp3',
     'Cristiano o religioso.mp3',
-    'Dio e Spirito.mp3',
-    'Gesu e Geova.mp3',
-    'Gesu il figlio di Dio.mp3',
-    'I nomi di Dio.mp3',
+    'Dio è Spirito.mp3',
+    'Gesù è Geova.mp3',
+    'Gesù il figlio di Dio - Parte 1 di 2.mp3',
+    'Gesù il figlio di Dio - Parte 2 di 2.mp3',
+    'I nomi di Dio - Parte 1 di 3.mp3',
+    'I nomi di Dio - Parte 2 di 3.mp3',
+    'I nomi di Dio - Parte 3 di 3.mp3',
     'Il Dio tremendo.mp3',
     'Il Dio uno e trino.mp3',
-    'Il termine DIO.mp3',
+    'Il termine Dio.mp3',
     'Il termine immagine.mp3',
-    'il termine nomeg.mp3',
-    'il termine padre.mp3',
-    'Io SONO.mp3',
-    'JHWH 01 I nomi della divinita.mp3',
-    'JHWH 02   Elohim.mp3',
-    'JHWH 03 La polideita e pluralita di Dio.mp3',
-    'JHWH 04   Lo Spirito di Dio.mp3',
-    "JHWH 05   L'antropomorfismo di Dio.mp3",
-    "JHWH 06   L'angelo dell'Eterno.mp3",
-    "JHWH 07   L'io sono.mp3",
-    'JHWH 08   La presenza di Cristo nel AT.mp3',
-    "JHWH 09   Cristo nell'Antico Testamento.mp3",
-    'JHWH 10 Gesu e il Signore.mp3',
-    'JHWH 11 un Dio trino.mp3',
-    'JHWH 12 Gesù rivela il Padre.mp3',
-    'JHWH ed i profeti.mp3',
-    'JHWH unico Dio.mp3',
-    'JHWH é Cristo.mp3',
-    "L'Angelo quale messaggero di YHWH.mp3",
-    "l'Elohim dell'Antico patto.mp3",
-    "L'unicità del Cristianesimo.mp3",
-    'La divinità di Gesù.mp3',
-    'La pluralità di Dio.mp3',
+    'Il termine nome.mp3',
+    'Il termine Padre.mp3',
+    'Io Sono.mp3',
+    'JHWH 01 - I nomi della divinita - Parte 1 di 4.mp3',
+    'JHWH 01 - I nomi della divinita - Parte 2 di 4.mp3',
+    'JHWH 01 - I nomi della divinita - Parte 3 di 4.mp3',
+    'JHWH 01 - I nomi della divinita - Parte 4 di 4.mp3',
+    'JHWH 02 - Elohim - Parte 1 di 3.mp3',
+    'JHWH 02 - Elohim - Parte 2 di 3.mp3',
+    'JHWH 02 - Elohim - Parte 3 di 3.mp3',
+    "JHWH 03 - La polideità e pluralità di Dio - Parte 1 di 3.mp3",
+    "JHWH 03 - La polideità e pluralità di Dio - Parte 2 di 3.mp3",
+    "JHWH 03 - La polideità e pluralità di Dio - Parte 3 di 3.mp3",
+    'JHWH 04 - Lo Spirito di Dio.mp3',
+    "JHWH 05 - L'antropomorfismo di Dio - Parte 1 di 3.mp3",
+    "JHWH 05 - L'antropomorfismo di Dio - Parte 2 di 3.mp3",
+    "JHWH 05 - L'antropomorfismo di Dio - Parte 3 di 3.mp3",
+    "JHWH 06 - L'angelo dell'Eterno - Parte 1 di 3.mp3",
+    "JHWH 06 - L'angelo dell'Eterno - Parte 2 di 3.mp3",
+    "JHWH 06 - L'angelo dell'Eterno - Parte 3 di 3.mp3",
+    "JHWH 07 - L'Io sono - Parte 1 di 2.mp3",
+    "JHWH 07 - L'Io sono - Parte 2 di 2.mp3",
+    'JHWH 08 - La presenza di Cristo nel AT - Parte 1 di 3.mp3',
+    'JHWH 08 - La presenza di Cristo nel AT - Parte 2 di 3.mp3',
+    'JHWH 08 - La presenza di Cristo nel AT - Parte 3 di 3.mp3',
+    "JHWH 09 - Cristo nell'Antico Testamento - Parte 1 di 2.mp3",
+    "JHWH 09 - Cristo nell'Antico Testamento - Parte 2 di 2.mp3",
+    "JHWH 10 - Gesù è il Signore - Parte 1 di 4.mp3",
+    "JHWH 10 - Gesù è il Signore - Parte 2 di 4.mp3",
+    "JHWH 10 - Gesù è il Signore - Parte 3 di 4.mp3",
+    "JHWH 10 - Gesù è il Signore - Parte 4 di 4.mp3",
+    'JHWH 11 - Un Dio trino - Parte 1 di 4.mp3',
+    'JHWH 11 - Un Dio trino - Parte 2 di 4.mp3',
+    'JHWH 11 - Un Dio trino - Parte 3 di 4.mp3',
+    'JHWH 11 - Un Dio trino - Parte 4 di 4.mp3',
+    "JHWH 12 - Gesù rivela il Padre - Parte 1 di 4.mp3",
+    "JHWH 12 - Gesù rivela il Padre - Parte 2 di 4.mp3",
+    "JHWH 12 - Gesù rivela il Padre - Parte 3 di 4.mp3",
+    "JHWH 12 - Gesù rivela il Padre - Parte 4 di 4.mp3",
+    "La divinità di Gesù - Parte 1 di 3.mp3",
+    "La divinità di Gesù - Parte 2 di 3.mp3",
+    "La divinità di Gesù - Parte 3 di 3.mp3",
+    "La pluralità di Dio - Parte 1 di 2.mp3",
+    "La pluralità di Dio _ Parte 2 di 2.mp3",
     "La polideità dell'Elohim.mp3",
-    'la vita comunitaria dei primi cristiani.mp3',
+    'La vita comunitaria dei primi cristiani.mp3',
     "Lo spirito dell'Elohim.mp3",
-    'Perché i figli di Dio sono divisi.mp3',
+    "L'unicità del Cristianesimo.mp3",
+    "Perché i figli di Dio sono divisi.mp3",
     'Prefazione al Libro.mp3',
-    'Sei guidato dallo Spirito Santo o da uno spirito maligno.mp3',
-    'Unico-Dio.mp3',
-    'uno stesso Dio.mp3',
-    'vi è un solo Dio.mp3',
+    'Sei guidato dallo Spirito Santo o da uno spirito maligno - Parte 1 di 2.mp3',
+    'Sei guidato dallo Spirito Santo o da uno spirito maligno - Parte 2 di 2.mp3',
+    'Unico Dio - Parte 1 di 2.mp3',
+    'Unico Dio - Parte 2 di 2.mp3',
+    'Uno stesso Dio.mp3',
+    'Vi è un solo Dio.mp3',
   ];
 
   static const Map<String, String> _nomiPersonalizzati = {
-    'il termine nomeg.mp3': 'il termine nome',
-    'Gesu e Geova.mp3': 'Gesù è Geova?',
+    "La pluralità di Dio _ Parte 2 di 2.mp3" : "La pluralità di Dio - Parte 2 di 2.mp3",
   };
 
   static const _audioServiceChannel =
@@ -81,11 +110,12 @@ class _PodcastScreenState extends State<PodcastScreen> {
   String? _podcastAttivo;
   bool _isPlaying = false;
   bool _isLoading = false;
+  bool _isDownloading = false;
   Duration _posizione = Duration.zero;
   Duration _durata = Duration.zero;
   DateTime _ultimoAggiornaService = DateTime.fromMillisecondsSinceEpoch(0);
-  DateTime _ultimoAggiornaPosizioneService = DateTime.fromMillisecondsSinceEpoch(0);
-  final Set<String> _downloadInCorso = {};
+  DateTime _ultimoAggiornaPosizioneService =
+  DateTime.fromMillisecondsSinceEpoch(0);
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
   bool get _useExternalPlayer => kIsWeb || _isWindows;
@@ -216,7 +246,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
     }
   }
 
-  Future<void> _aggiornaPosizioneService(Duration posizione, Duration durata) async {
+  Future<void> _aggiornaPosizioneService(
+      Duration posizione, Duration durata) async {
     try {
       await _audioServiceChannel.invokeMethod('updatePosition', {
         'positionMs': posizione.inMilliseconds,
@@ -258,8 +289,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
       return;
     }
 
-    if (_downloadInCorso.contains(filename)) return;
-    setState(() => _downloadInCorso.add(filename));
+    if (_isDownloading) return;
+    setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
         'url': Uri.encodeFull(_baseUrl + filename),
@@ -277,7 +308,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
     } catch (e) {
       debugPrint('Errore download: $e');
     } finally {
-      if (mounted) setState(() => _downloadInCorso.remove(filename));
+      if (mounted) setState(() => _isDownloading = false);
     }
   }
 
@@ -308,7 +339,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   String _displayName(String filename) {
-    return _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
+    return _nomiPersonalizzati[filename] ??
+        filename.replaceAll('.mp3', '');
   }
 
   Future<void> _riproduci(String filename) async {
@@ -401,7 +433,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                       slivers: [
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                            padding:
+                            const EdgeInsets.fromLTRB(16, 20, 16, 8),
                             child: Column(
                               children: [
                                 const Icon(Icons.headphones_rounded,
@@ -431,7 +464,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 TextField(
                                   controller: _controller,
                                   onChanged: _cerca,
-                                  style: const TextStyle(color: Colors.white),
+                                  style:
+                                  const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     hintText: 'Cerca podcast...',
                                     hintStyle: const TextStyle(
@@ -449,9 +483,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     )
                                         : null,
                                     filled: true,
-                                    fillColor: Colors.white.withOpacity(0.15),
+                                    fillColor:
+                                    Colors.white.withOpacity(0.15),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius:
+                                      BorderRadius.circular(12),
                                       borderSide: BorderSide.none,
                                     ),
                                     contentPadding:
@@ -470,7 +506,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                             child: Text(
                               'Nessun risultato',
                               style: TextStyle(
-                                  color: Colors.white60, fontSize: 16),
+                                  color: Colors.white60,
+                                  fontSize: 16),
                             ),
                           ),
                         )
@@ -489,26 +526,26 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 final podcast = _risultati[index];
                                 final isAttivo =
                                     _podcastAttivo == podcast;
-                                final isDownloading =
-                                _downloadInCorso.contains(podcast);
                                 return Padding(
-                                  padding:
-                                  const EdgeInsets.only(bottom: 6),
-                                  child: SizedBox(
-                                    height: 52,
-                                    child: ClipRRect(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                      child: Material(
-                                        color: (isAttivo &&
-                                            !_useExternalPlayer
-                                            ? const Color(0xFF4A0072)
-                                            : const Color(0xFF7B1FA2))
-                                            .withOpacity(isAttivo &&
-                                            !_useExternalPlayer
-                                            ? 0.95
-                                            : 0.88),
+                                  padding: const EdgeInsets.only(
+                                      bottom: 6),
+                                  child: ClipRRect(
+                                    borderRadius:
+                                    BorderRadius.circular(12),
+                                    child: Material(
+                                      color: (isAttivo &&
+                                          !_useExternalPlayer
+                                          ? const Color(0xFF4A0072)
+                                          : const Color(0xFF7B1FA2))
+                                          .withOpacity(isAttivo &&
+                                          !_useExternalPlayer
+                                          ? 0.95
+                                          : 0.88),
+                                      child: IntrinsicHeight(
                                         child: Row(
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment
+                                              .stretch,
                                           children: [
                                             Expanded(
                                               child: InkWell(
@@ -517,7 +554,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 child: Padding(
                                                   padding: const EdgeInsets
                                                       .symmetric(
-                                                      horizontal: 12),
+                                                      horizontal: 12,
+                                                      vertical: 14),
                                                   child: Row(
                                                     mainAxisAlignment:
                                                     MainAxisAlignment
@@ -559,6 +597,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                           textAlign:
                                                           TextAlign
                                                               .center,
+                                                          softWrap:
+                                                          true,
                                                           style:
                                                           TextStyle(
                                                             fontSize:
@@ -572,9 +612,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                 : FontWeight
                                                                 .normal,
                                                           ),
-                                                          overflow:
-                                                          TextOverflow
-                                                              .ellipsis,
                                                         ),
                                                       ),
                                                     ],
@@ -584,20 +621,16 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                             ),
                                             Container(
                                               width: 1,
-                                              height: 28,
                                               color: Colors.white24,
                                             ),
                                             InkWell(
-                                              onTap: isDownloading
-                                                  ? null
-                                                  : () =>
+                                              onTap: () =>
                                                   _scaricaPodcast(
                                                       podcast),
                                               child: SizedBox(
                                                 width: 44,
-                                                height: 52,
                                                 child: Center(
-                                                  child: isDownloading
+                                                  child: _isDownloading
                                                       ? const SizedBox(
                                                     width: 16,
                                                     height: 16,
@@ -647,7 +680,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           ),
                         ],
                       ),
-                      padding: EdgeInsets.fromLTRB(16, 10, 16,
+                      padding: EdgeInsets.fromLTRB(
+                          16,
+                          10,
+                          16,
                           16 + MediaQuery.of(context).padding.bottom),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -687,8 +723,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                   ? _durata.inMilliseconds.toDouble()
                                   : 1,
                               onChanged: (val) {
-                                _player.seek(
-                                    Duration(milliseconds: val.toInt()));
+                                _player.seek(Duration(
+                                    milliseconds: val.toInt()));
                               },
                             ),
                           ),
