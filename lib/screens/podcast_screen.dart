@@ -4,7 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../theme_provider.dart';
+import 'webview_audio_player_windows.dart';
+
+const _kBottoneClassico = Color(0xFF7B1FA2);
+const _kAttivoClassico = Color(0xFF4A0072);
+const _kPlayerClassico = Color(0xFF4A0072);
+const _kAppBarClassico = Color(0xFF1829E8);
+const _kPlayerScuro = Color(0xDD0A0A1A);
+const _kAppBarScuro = Color(0xCC0A0A1A);
+const _kPlayerChiaro = Color(0xDDFFFFFF);
+const _kAppBarChiaro = Color(0xCCFFFFFF);
 
 class PodcastScreen extends StatefulWidget {
   const PodcastScreen({super.key});
@@ -94,7 +106,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
   ];
 
   static const Map<String, String> _nomiPersonalizzati = {
-    "La pluralità di Dio _ Parte 2 di 2.mp3" : "La pluralità di Dio - Parte 2 di 2.mp3",
+    "La pluralità di Dio _ Parte 2 di 2.mp3":
+    "La pluralità di Dio - Parte 2 di 2",
   };
 
   static const _audioServiceChannel =
@@ -118,37 +131,27 @@ class _PodcastScreenState extends State<PodcastScreen> {
   DateTime.fromMillisecondsSinceEpoch(0);
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
-  bool get _useExternalPlayer => kIsWeb || _isWindows;
-  bool get _isIOS => !kIsWeb && Platform.isIOS;
   bool get _isMacOS => !kIsWeb && Platform.isMacOS;
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
+  bool get _useExternalPlayer => kIsWeb;
 
   @override
   void initState() {
     super.initState();
-    if (!_useExternalPlayer) {
+    if (!_useExternalPlayer && !_isWindows) {
       _configuraAudioSession();
-
       _playerControlChannel.setMethodCallHandler((call) async {
         if (!mounted) return;
         switch (call.method) {
-          case 'play':
-            await _player.play();
-            break;
-          case 'pause':
-            await _player.pause();
-            break;
+          case 'play': await _player.play(); break;
+          case 'pause': await _player.pause(); break;
           case 'togglePlayPause':
-            if (_isPlaying) {
-              await _player.pause();
-            } else {
-              await _player.play();
-            }
+            if (_isPlaying) await _player.pause();
+            else await _player.play();
             break;
           case 'seekTo':
             final posMs = call.arguments as int?;
-            if (posMs != null) {
-              await _player.seek(Duration(milliseconds: posMs));
-            }
+            if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
             break;
         }
       });
@@ -163,7 +166,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
           });
           if (state.playing != wasPlaying && _podcastAttivo != null) {
             _aggiornaService(_displayName(_podcastAttivo!), state.playing);
-            _aggiornaNowPlaying(_displayName(_podcastAttivo!), state.playing);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_podcastAttivo!), state.playing);
           }
         }
       });
@@ -175,10 +178,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
           if (now.difference(_ultimoAggiornaPosizioneService).inSeconds >= 5 &&
               _podcastAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
-            if (!kIsWeb && Platform.isAndroid) {
-              _aggiornaPosizioneService(pos, _durata);
-            }
-            _aggiornaNowPlaying(_displayName(_podcastAttivo!), _isPlaying);
+            if (!kIsWeb && Platform.isAndroid) _aggiornaPosizioneService(pos, _durata);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_podcastAttivo!), _isPlaying);
           }
         }
       });
@@ -189,16 +190,11 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
       _player.processingStateStream.listen((state) {
         if (state == ProcessingState.completed && mounted) {
-          setState(() {
-            _isPlaying = false;
-            _posizione = Duration.zero;
-          });
+          setState(() { _isPlaying = false; _posizione = Duration.zero; });
           _player.seek(Duration.zero);
           _player.stop();
           _fermaService();
-          if (_isIOS || _isMacOS) {
-            _nowPlayingChannel.invokeMethod('clear');
-          }
+          if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
         }
       });
     }
@@ -208,8 +204,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionCategoryOptions:
-      AVAudioSessionCategoryOptions.allowBluetooth,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.allowBluetooth,
       avAudioSessionMode: AVAudioSessionMode.defaultMode,
       androidAudioAttributes: AndroidAudioAttributes(
         contentType: AndroidAudioContentType.music,
@@ -222,103 +217,70 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Future<void> _avviaService(String titolo) async {
-    try {
-      await _audioServiceChannel.invokeMethod('startService', {
-        'title': titolo,
-        'isPlaying': true,
-      });
-    } catch (e) {
-      debugPrint('Errore avvio service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('startService', {'title': titolo, 'isPlaying': true}); }
+    catch (e) { debugPrint('Errore avvio service: $e'); }
   }
 
   Future<void> _aggiornaService(String titolo, bool isPlaying) async {
     final now = DateTime.now();
     if (now.difference(_ultimoAggiornaService).inMilliseconds < 200) return;
     _ultimoAggiornaService = now;
-    try {
-      await _audioServiceChannel.invokeMethod('updateService', {
-        'title': titolo,
-        'isPlaying': isPlaying,
-      });
-    } catch (e) {
-      debugPrint('Errore aggiornamento service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('updateService', {'title': titolo, 'isPlaying': isPlaying}); }
+    catch (e) { debugPrint('Errore aggiornamento service: $e'); }
   }
 
-  Future<void> _aggiornaPosizioneService(
-      Duration posizione, Duration durata) async {
+  Future<void> _aggiornaPosizioneService(Duration posizione, Duration durata) async {
     try {
       await _audioServiceChannel.invokeMethod('updatePosition', {
-        'positionMs': posizione.inMilliseconds,
-        'durationMs': durata.inMilliseconds,
+        'positionMs': posizione.inMilliseconds, 'durationMs': durata.inMilliseconds,
       });
-    } catch (e) {
-      debugPrint('Errore aggiornamento posizione: $e');
-    }
+    } catch (e) { debugPrint('Errore aggiornamento posizione: $e'); }
   }
 
   Future<void> _aggiornaNowPlaying(String titolo, bool isPlaying) async {
     if (!(_isIOS || _isMacOS)) return;
     try {
       await _nowPlayingChannel.invokeMethod('update', {
-        'title': titolo,
-        'isPlaying': isPlaying,
-        'positionMs': _posizione.inMilliseconds,
-        'durationMs': _durata.inMilliseconds,
+        'title': titolo, 'isPlaying': isPlaying,
+        'positionMs': _posizione.inMilliseconds, 'durationMs': _durata.inMilliseconds,
       });
-    } catch (e) {
-      debugPrint('Errore NowPlaying: $e');
-    }
+    } catch (e) { debugPrint('Errore NowPlaying: $e'); }
   }
 
   Future<void> _fermaService() async {
-    try {
-      await _audioServiceChannel.invokeMethod('stopService');
-    } catch (e) {
-      debugPrint('Errore stop service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('stopService'); }
+    catch (e) { debugPrint('Errore stop service: $e'); }
   }
 
   Future<void> _scaricaPodcast(String filename) async {
     if (kIsWeb) return;
-
-    if (_isIOS || _isMacOS) {
-      final url = Uri.encodeFull(_baseUrl + filename);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (_isIOS || _isMacOS || _isWindows) {
+      await launchUrl(Uri.parse(Uri.encodeFull(_baseUrl + filename)),
+          mode: LaunchMode.externalApplication);
       return;
     }
-
     if (_isDownloading) return;
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
         'url': Uri.encodeFull(_baseUrl + filename),
-        'filename': filename,
-        'title': _displayName(filename),
+        'filename': filename, 'title': _displayName(filename),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download avviato: ${_displayName(filename)}'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Download avviato: ${_displayName(filename)}'),
+          duration: const Duration(seconds: 2),
+        ));
       }
-    } catch (e) {
-      debugPrint('Errore download: $e');
-    } finally {
-      if (mounted) setState(() => _isDownloading = false);
-    }
+    } catch (e) { debugPrint('Errore download: $e'); }
+    finally { if (mounted) setState(() => _isDownloading = false); }
   }
 
   @override
   void dispose() {
-    if (!_useExternalPlayer) {
+    if (!_useExternalPlayer && !_isWindows) {
       _fermaService();
-      if (_isIOS || _isMacOS) {
-        _nowPlayingChannel.invokeMethod('clear');
-      }
+      if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
       _player.dispose();
     }
     _controller.dispose();
@@ -339,24 +301,18 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   String _displayName(String filename) {
-    return _nomiPersonalizzati[filename] ??
-        filename.replaceAll('.mp3', '');
+    return _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
   }
 
   Future<void> _riproduci(String filename) async {
-    if (_useExternalPlayer) {
-      final url = Uri.encodeFull(_baseUrl + filename);
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    if (_isWindows) {
+      setState(() => _podcastAttivo = filename);
       return;
     }
-
     try {
       if (_podcastAttivo == filename) {
-        if (_isPlaying) {
-          await _player.pause();
-        } else {
-          await _player.play();
-        }
+        if (_isPlaying) await _player.pause();
+        else await _player.play();
         return;
       }
       setState(() {
@@ -366,22 +322,14 @@ class _PodcastScreenState extends State<PodcastScreen> {
         _durata = Duration.zero;
       });
       final url = Uri.encodeFull(_baseUrl + filename);
-      if (!(_isIOS || _isMacOS)) {
-        await _avviaService(_displayName(filename));
-      }
+      if (!(_isIOS || _isMacOS)) await _avviaService(_displayName(filename));
       await _player.setUrl(url);
       await _player.play();
-      if (_isIOS || _isMacOS) {
-        await _aggiornaNowPlaying(_displayName(filename), true);
-      }
+      if (_isIOS || _isMacOS) await _aggiornaNowPlaying(_displayName(filename), true);
     } catch (e, stack) {
-      debugPrint('ERRORE RIPRODUZIONE: $e');
-      debugPrint('STACK: $stack');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Errore nella riproduzione')),
-        );
-      }
+      debugPrint('ERRORE RIPRODUZIONE: $e\nSTACK: $stack');
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Errore nella riproduzione')));
     }
   }
 
@@ -393,24 +341,92 @@ class _PodcastScreenState extends State<PodcastScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppThemeProvider>();
+    final tema = provider.tema;
+    final isModerno = tema != AppTema.classico;
     final isDesktop = MediaQuery.of(context).size.width > 1000;
-    final fontSize = isDesktop ? 13.0 : 14.0;
+    final sfondo = isDesktop ? provider.sfondoDesktop : provider.sfondoMobile;
+    final fontSize = provider.fontSizeBottone;
+
+    final Color kAttivoColore;
+    final Color kPlayerColore;
+    final Color kAppBarColore;
+    final Color kTestoColore;
+    final Color kTestoSecColore;
+    final Color kSliderAttivo;
+    final Color kSliderInattivo;
+    final Color kSearchFill;
+    final Color kSearchBordo;
+    final Color kDivisoreColore;
+    final Color kSfondoRiga;
+    final Color kBottoneColore;
+    final Color kBottoneBordo;
+
+    switch (tema) {
+      case AppTema.classico:
+        kBottoneColore = _kBottoneClassico;
+        kBottoneBordo = _kBottoneClassico;
+        kAttivoColore = _kAttivoClassico;
+        kPlayerColore = _kPlayerClassico;
+        kAppBarColore = _kAppBarClassico;
+        kTestoColore = Colors.white;
+        kTestoSecColore = Colors.white70;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kSearchFill = Colors.black.withOpacity(0.45);
+        kSearchBordo = Colors.transparent;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.transparent;
+        break;
+      case AppTema.modernoScuro:
+        kBottoneColore = Colors.transparent;
+        kBottoneBordo = Colors.transparent;
+        kAttivoColore = Colors.white.withOpacity(0.08);
+        kPlayerColore = _kPlayerScuro;
+        kAppBarColore = _kAppBarScuro;
+        kTestoColore = Colors.white;
+        kTestoSecColore = Colors.white60;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kSearchFill = Colors.black.withOpacity(0.3);
+        kSearchBordo = Colors.white24;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.black.withOpacity(0.25);
+        break;
+      case AppTema.modernoChiaro:
+        kBottoneColore = Colors.transparent;
+        kBottoneBordo = Colors.transparent;
+        kAttivoColore = Colors.black.withOpacity(0.08);
+        kPlayerColore = _kPlayerChiaro;
+        kAppBarColore = _kAppBarChiaro;
+        kTestoColore = const Color(0xFF1A0A00);
+        kTestoSecColore = const Color(0xFF5C3D1E);
+        kSliderAttivo = const Color(0xFF7B4F2E);
+        kSliderInattivo = const Color(0xFFD4A574);
+        kSearchFill = Colors.white.withOpacity(0.5);
+        kSearchBordo = const Color(0x445C3D1E);
+        kDivisoreColore = const Color(0x445C3D1E);
+        kSfondoRiga = Colors.white.withOpacity(0.45);
+        break;
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('Podcast'),
+        backgroundColor: kAppBarColore,
+        foregroundColor: kTestoColore,
+        elevation: 0,
+        title: Text('Podcast',
+            style: TextStyle(color: kTestoColore,
+                fontWeight: FontWeight.w600, fontStyle: FontStyle.italic)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: kTestoColore),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/sfondo_home.jpeg'),
-            fit: BoxFit.cover,
-          ),
+        decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage(sfondo), fit: BoxFit.cover),
         ),
         child: Container(
           decoration: BoxDecoration(
@@ -418,80 +434,64 @@ class _PodcastScreenState extends State<PodcastScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.35),
-                Colors.black.withOpacity(0.6),
+                Colors.black.withOpacity(provider.gradienteTop),
+                Colors.black.withOpacity(provider.gradienteBottom),
               ],
             ),
           ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1200),
-              child: Column(
-                children: [
-                  Expanded(
+          // ── COLONNA ESTERNA senza maxWidth — player Windows largo tutta la finestra
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
                     child: CustomScrollView(
                       slivers: [
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding:
-                            const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                             child: Column(
                               children: [
-                                const Icon(Icons.headphones_rounded,
-                                    color: Colors.white70, size: 36),
+                                Icon(Icons.headphones_rounded,
+                                    color: kTestoSecColore, size: 36),
                                 const SizedBox(height: 8),
-                                const Text(
-                                  'Podcast di Ellero Balzani',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    shadows: [
-                                      Shadow(
-                                          blurRadius: 6,
-                                          color: Colors.black54)
-                                    ],
-                                  ),
-                                ),
+                                Text('Podcast di Ellero Balzani',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22, fontWeight: FontWeight.bold,
+                                      fontStyle: FontStyle.italic, color: kTestoColore,
+                                      shadows: tema == AppTema.modernoChiaro
+                                          ? [] : const [Shadow(blurRadius: 6, color: Colors.black54)],
+                                    )),
                                 const SizedBox(height: 4),
-                                Text(
-                                  '${_risultati.length} episodi',
-                                  style: const TextStyle(
-                                      fontSize: 13, color: Colors.white60),
-                                ),
+                                Text('${_risultati.length} episodi',
+                                    style: TextStyle(fontSize: 13, color: kTestoSecColore)),
                                 const SizedBox(height: 10),
                                 TextField(
                                   controller: _controller,
                                   onChanged: _cerca,
-                                  style:
-                                  const TextStyle(color: Colors.white),
+                                  style: TextStyle(color: kTestoColore),
                                   decoration: InputDecoration(
                                     hintText: 'Cerca podcast...',
-                                    hintStyle: const TextStyle(
-                                        color: Colors.white54),
-                                    prefixIcon: const Icon(Icons.search,
-                                        color: Colors.white70),
+                                    hintStyle: TextStyle(color: kTestoSecColore),
+                                    prefixIcon: Icon(Icons.search, color: kTestoSecColore),
                                     suffixIcon: _controller.text.isNotEmpty
                                         ? IconButton(
-                                      icon: const Icon(Icons.clear,
-                                          color: Colors.white70),
-                                      onPressed: () {
-                                        _controller.clear();
-                                        _cerca('');
-                                      },
-                                    )
+                                        icon: Icon(Icons.clear, color: kTestoSecColore),
+                                        onPressed: () { _controller.clear(); _cerca(''); })
                                         : null,
                                     filled: true,
-                                    fillColor:
-                                    Colors.white.withOpacity(0.15),
-                                    border: OutlineInputBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
+                                    fillColor: kSearchFill,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: kSearchBordo, width: 1),
                                     ),
-                                    contentPadding:
-                                    const EdgeInsets.symmetric(
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: kTestoColore, width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
                                         vertical: 12, horizontal: 16),
                                   ),
                                 ),
@@ -501,163 +501,153 @@ class _PodcastScreenState extends State<PodcastScreen> {
                           ),
                         ),
                         _risultati.isEmpty
-                            ? const SliverFillRemaining(
-                          child: Center(
-                            child: Text(
-                              'Nessun risultato',
-                              style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 16),
-                            ),
-                          ),
-                        )
+                            ? SliverFillRemaining(
+                            child: Center(child: Text('Nessun risultato',
+                                style: TextStyle(color: kTestoSecColore, fontSize: 16))))
                             : SliverPadding(
-                          padding: EdgeInsets.fromLTRB(
-                              16,
-                              0,
-                              16,
-                              _podcastAttivo != null &&
-                                  !_useExternalPlayer
-                                  ? 8
-                                  : 24),
+                          padding: EdgeInsets.fromLTRB(16, 0, 16,
+                              _podcastAttivo != null ? 8 : 24),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                 final podcast = _risultati[index];
-                                final isAttivo =
-                                    _podcastAttivo == podcast;
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                      bottom: 6),
-                                  child: ClipRRect(
-                                    borderRadius:
-                                    BorderRadius.circular(12),
-                                    child: Material(
-                                      color: (isAttivo &&
-                                          !_useExternalPlayer
-                                          ? const Color(0xFF4A0072)
-                                          : const Color(0xFF7B1FA2))
-                                          .withOpacity(isAttivo &&
-                                          !_useExternalPlayer
-                                          ? 0.95
-                                          : 0.88),
-                                      child: IntrinsicHeight(
-                                        child: Row(
-                                          crossAxisAlignment:
-                                          CrossAxisAlignment
-                                              .stretch,
-                                          children: [
-                                            Expanded(
-                                              child: InkWell(
-                                                onTap: () =>
-                                                    _riproduci(podcast),
+                                final isAttivo = _podcastAttivo == podcast;
+                                final isUltimo = index == _risultati.length - 1;
+
+                                if (isModerno) {
+                                  return Container(
+                                    color: isAttivo ? kAttivoColore : kSfondoRiga,
+                                    child: Column(
+                                      children: [
+                                        IntrinsicHeight(
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              InkWell(
+                                                onTap: () => _riproduci(podcast),
                                                 child: Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 14),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .center,
-                                                    children: [
-                                                      if (isAttivo &&
-                                                          _isLoading &&
-                                                          !_useExternalPlayer)
-                                                        const SizedBox(
-                                                          width: 20,
-                                                          height: 20,
-                                                          child:
-                                                          CircularProgressIndicator(
-                                                            color: Colors
-                                                                .white,
-                                                            strokeWidth:
-                                                            2,
-                                                          ),
-                                                        )
-                                                      else
-                                                        Icon(
-                                                          isAttivo &&
-                                                              _isPlaying &&
-                                                              !_useExternalPlayer
-                                                              ? Icons
-                                                              .pause_circle_outline_rounded
-                                                              : Icons
-                                                              .play_circle_outline_rounded,
-                                                          size: 20,
-                                                          color: Colors
-                                                              .white,
-                                                        ),
-                                                      const SizedBox(
-                                                          width: 8),
-                                                      Expanded(
-                                                        child: Text(
-                                                          _displayName(
-                                                              podcast),
-                                                          textAlign:
-                                                          TextAlign
-                                                              .center,
-                                                          softWrap:
-                                                          true,
-                                                          style:
-                                                          TextStyle(
-                                                            fontSize:
-                                                            fontSize,
-                                                            color: Colors
-                                                                .white,
-                                                            fontWeight: isAttivo &&
-                                                                !_useExternalPlayer
-                                                                ? FontWeight
-                                                                .bold
-                                                                : FontWeight
-                                                                .normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 12, vertical: 14),
+                                                  child: isAttivo && _isLoading && !_isWindows
+                                                      ? SizedBox(width: 22, height: 22,
+                                                      child: CircularProgressIndicator(
+                                                          color: kTestoColore, strokeWidth: 2))
+                                                      : Icon(
+                                                      isAttivo && _isPlaying && !_isWindows
+                                                          ? Icons.pause_circle_outline_rounded
+                                                          : Icons.play_circle_outline_rounded,
+                                                      size: 24,
+                                                      color: isAttivo ? kTestoColore : kTestoSecColore),
+                                                ),
+                                              ),
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap: () => _riproduci(podcast),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                                    child: Text(_displayName(podcast),
+                                                        style: TextStyle(
+                                                          color: kTestoColore,
+                                                          fontSize: fontSize,
+                                                          fontWeight: isAttivo
+                                                              ? FontWeight.bold : FontWeight.normal,
+                                                        )),
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                            Container(
-                                              width: 1,
-                                              color: Colors.white24,
-                                            ),
-                                            InkWell(
-                                              onTap: () =>
-                                                  _scaricaPodcast(
-                                                      podcast),
-                                              child: SizedBox(
-                                                width: 44,
-                                                child: Center(
+                                              InkWell(
+                                                onTap: () => _scaricaPodcast(podcast),
+                                                child: Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 12, vertical: 14),
                                                   child: _isDownloading
-                                                      ? const SizedBox(
-                                                    width: 16,
-                                                    height: 16,
-                                                    child:
-                                                    CircularProgressIndicator(
-                                                      color: Colors
-                                                          .white54,
-                                                      strokeWidth:
-                                                      2,
+                                                      ? SizedBox(width: 18, height: 18,
+                                                      child: CircularProgressIndicator(
+                                                          color: kTestoSecColore, strokeWidth: 2))
+                                                      : Icon(Icons.download_rounded,
+                                                      size: 18, color: kTestoSecColore),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        if (!isUltimo)
+                                          Divider(height: 1, thickness: 1, color: kDivisoreColore),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Material(
+                                        color: isAttivo ? kAttivoColore : kBottoneColore,
+                                        child: IntrinsicHeight(
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              Expanded(
+                                                child: InkWell(
+                                                  onTap: () => _riproduci(podcast),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 12, vertical: 14),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      children: [
+                                                        if (isAttivo && _isLoading && !_isWindows)
+                                                          SizedBox(width: 20, height: 20,
+                                                              child: CircularProgressIndicator(
+                                                                  color: kTestoColore, strokeWidth: 2))
+                                                        else
+                                                          Icon(
+                                                              isAttivo && _isPlaying && !_isWindows
+                                                                  ? Icons.pause_circle_outline_rounded
+                                                                  : Icons.play_circle_outline_rounded,
+                                                              size: 20, color: kTestoColore),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            _displayName(podcast).toUpperCase(),
+                                                            textAlign: TextAlign.center,
+                                                            softWrap: true,
+                                                            style: TextStyle(
+                                                              fontSize: fontSize,
+                                                              color: kTestoColore,
+                                                              letterSpacing: 0.3,
+                                                              fontWeight: isAttivo
+                                                                  ? FontWeight.bold : FontWeight.w500,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  )
-                                                      : const Icon(
-                                                    Icons
-                                                        .download_rounded,
-                                                    size: 18,
-                                                    color: Colors
-                                                        .white60,
                                                   ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                              Container(width: 1, color: kBottoneBordo),
+                                              InkWell(
+                                                onTap: () => _scaricaPodcast(podcast),
+                                                child: SizedBox(
+                                                  width: 44,
+                                                  child: Center(
+                                                    child: _isDownloading
+                                                        ? SizedBox(width: 16, height: 16,
+                                                        child: CircularProgressIndicator(
+                                                            color: kTestoSecColore, strokeWidth: 2))
+                                                        : Icon(Icons.download_rounded,
+                                                        size: 18, color: kTestoSecColore),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                );
+                                  );
+                                }
                               },
                               childCount: _risultati.length,
                             ),
@@ -666,136 +656,98 @@ class _PodcastScreenState extends State<PodcastScreen> {
                       ],
                     ),
                   ),
-
-                  // Mini player
-                  if (_podcastAttivo != null && !_useExternalPlayer)
-                    Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D0045).withOpacity(0.97),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, -4),
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.fromLTRB(
-                          16,
-                          10,
-                          16,
-                          16 + MediaQuery.of(context).padding.bottom),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _displayName(_podcastAttivo!),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          SliderTheme(
-                            data: SliderTheme.of(context).copyWith(
-                              trackHeight: 3,
-                              thumbShape: const RoundSliderThumbShape(
-                                  enabledThumbRadius: 6),
-                              overlayShape: const RoundSliderOverlayShape(
-                                  overlayRadius: 12),
-                              activeTrackColor: const Color(0xFFCE93D8),
-                              inactiveTrackColor: Colors.white24,
-                              thumbColor: Colors.white,
-                              overlayColor: Colors.white24,
-                            ),
-                            child: Slider(
-                              value: _durata.inMilliseconds > 0
-                                  ? _posizione.inMilliseconds
-                                  .clamp(0, _durata.inMilliseconds)
-                                  .toDouble()
-                                  : 0,
-                              min: 0,
-                              max: _durata.inMilliseconds > 0
-                                  ? _durata.inMilliseconds.toDouble()
-                                  : 1,
-                              onChanged: (val) {
-                                _player.seek(Duration(
-                                    milliseconds: val.toInt()));
-                              },
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                _formatDuration(_posizione),
-                                style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
-                              ),
-                              const Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.replay_10,
-                                    color: Colors.white70, size: 26),
-                                onPressed: () {
-                                  final newPos = _posizione -
-                                      const Duration(seconds: 10);
-                                  _player.seek(newPos < Duration.zero
-                                      ? Duration.zero
-                                      : newPos);
-                                },
-                              ),
-                              _isLoading
-                                  ? const SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                                  : IconButton(
-                                icon: Icon(
-                                  _isPlaying
-                                      ? Icons.pause_circle_filled
-                                      : Icons.play_circle_filled,
-                                  color: Colors.white,
-                                  size: 44,
-                                ),
-                                onPressed: () {
-                                  if (_isPlaying) {
-                                    _player.pause();
-                                  } else {
-                                    _player.play();
-                                  }
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.forward_10,
-                                    color: Colors.white70, size: 26),
-                                onPressed: () {
-                                  final newPos = _posizione +
-                                      const Duration(seconds: 10);
-                                  if (newPos < _durata)
-                                    _player.seek(newPos);
-                                },
-                              ),
-                              const Spacer(),
-                              Text(
-                                _formatDuration(_durata),
-                                style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
+              // ── PLAYER — fuori dal ConstrainedBox, largo tutta la finestra
+              if (_podcastAttivo != null)
+                _isWindows
+                    ? WebviewAudioPlayerWindows(
+                  audioUrl: Uri.encodeFull(_baseUrl + _podcastAttivo!),
+                  titolo: _displayName(_podcastAttivo!),
+                  playerColore: kPlayerColore,
+                  testoColore: kTestoColore,
+                  testoSecColore: kTestoSecColore,
+                )
+                    : Container(
+                  decoration: BoxDecoration(
+                    color: kPlayerColore,
+                    boxShadow: [BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 12, offset: const Offset(0, -4))],
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                      16, 10, 16, 16 + MediaQuery.of(context).padding.bottom),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_displayName(_podcastAttivo!),
+                          textAlign: TextAlign.center, maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(color: kTestoColore,
+                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          activeTrackColor: kSliderAttivo,
+                          inactiveTrackColor: kSliderInattivo,
+                          thumbColor: kTestoColore,
+                          overlayColor: kTestoColore.withOpacity(0.2),
+                        ),
+                        child: Slider(
+                          value: _durata.inMilliseconds > 0
+                              ? _posizione.inMilliseconds
+                              .clamp(0, _durata.inMilliseconds).toDouble() : 0,
+                          min: 0,
+                          max: _durata.inMilliseconds > 0
+                              ? _durata.inMilliseconds.toDouble() : 1,
+                          onChanged: (val) =>
+                              _player.seek(Duration(milliseconds: val.toInt())),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(_formatDuration(_posizione),
+                              style: TextStyle(color: kTestoSecColore, fontSize: 11)),
+                          const Spacer(),
+                          IconButton(
+                            icon: Icon(Icons.replay_10, color: kTestoSecColore, size: 26),
+                            onPressed: () {
+                              final newPos = _posizione - const Duration(seconds: 10);
+                              _player.seek(newPos < Duration.zero ? Duration.zero : newPos);
+                            },
+                          ),
+                          _isLoading
+                              ? SizedBox(width: 40, height: 40,
+                              child: CircularProgressIndicator(
+                                  color: kTestoColore, strokeWidth: 2))
+                              : IconButton(
+                              icon: Icon(_isPlaying
+                                  ? Icons.pause_circle_filled
+                                  : Icons.play_circle_filled,
+                                  color: kTestoColore, size: 44),
+                              onPressed: () {
+                                if (_isPlaying) _player.pause();
+                                else _player.play();
+                              }),
+                          IconButton(
+                            icon: Icon(Icons.forward_10, color: kTestoSecColore, size: 26),
+                            onPressed: () {
+                              final newPos = _posizione + const Duration(seconds: 10);
+                              if (newPos < _durata) _player.seek(newPos);
+                            },
+                          ),
+                          const Spacer(),
+                          Text(_formatDuration(_durata),
+                              style: TextStyle(color: kTestoSecColore, fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
       ),

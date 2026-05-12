@@ -1,12 +1,16 @@
+// categoria_screen.dart
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/categorie.dart';
+import '../theme_provider.dart';
 import 'pdf_viewer_screen.dart';
+import 'webview_audio_player_windows.dart';
 
 String _titoloVisualizzato(String titolo) {
   const Map<String, String> override = {
@@ -36,9 +40,17 @@ String _titoloVisualizzato(String titolo) {
   return override[titolo] ?? titolo;
 }
 
+const _kBottoneClassico = Color(0xFF1829E8);
+const _kAttivoClassico = Color(0xFF0F1BA0);
+const _kPlayerClassico = Color(0xFF0F1BA0);
+const _kAppBarClassico = Color(0xFF1829E8);
+const _kPlayerScuro = Color(0xDD0A0A1A);
+const _kAppBarScuro = Color(0xCC0A0A1A);
+const _kPlayerChiaro = Color(0xDDFFFFFF);
+const _kAppBarChiaro = Color(0xCCFFFFFF);
+
 class CategoriaScreen extends StatefulWidget {
   final Categoria categoria;
-
   const CategoriaScreen({super.key, required this.categoria});
 
   @override
@@ -68,37 +80,27 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   DateTime.fromMillisecondsSinceEpoch(0);
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
-  bool get _useExternalPlayer => kIsWeb || _isWindows;
-  bool get _isIOS => !kIsWeb && Platform.isIOS;
   bool get _isMacOS => !kIsWeb && Platform.isMacOS;
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
+  bool get _useExternalPlayer => kIsWeb;
 
   @override
   void initState() {
     super.initState();
-    if (!_useExternalPlayer) {
+    if (!_useExternalPlayer && !_isWindows) {
       _configuraAudioSession();
-
       _playerControlChannel.setMethodCallHandler((call) async {
         if (!mounted) return;
         switch (call.method) {
-          case 'play':
-            await _player.play();
-            break;
-          case 'pause':
-            await _player.pause();
-            break;
+          case 'play': await _player.play(); break;
+          case 'pause': await _player.pause(); break;
           case 'togglePlayPause':
-            if (_isPlaying) {
-              await _player.pause();
-            } else {
-              await _player.play();
-            }
+            if (_isPlaying) await _player.pause();
+            else await _player.play();
             break;
           case 'seekTo':
             final posMs = call.arguments as int?;
-            if (posMs != null) {
-              await _player.seek(Duration(milliseconds: posMs));
-            }
+            if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
             break;
         }
       });
@@ -113,7 +115,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
           });
           if (state.playing != wasPlaying && _audioAttivo != null) {
             _aggiornaService(_displayName(_audioAttivo!), state.playing);
-            _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
           }
         }
       });
@@ -123,13 +125,10 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
           setState(() => _posizione = pos);
           final now = DateTime.now();
           if (now.difference(_ultimoAggiornaPosizioneService).inSeconds >= 5 &&
-              _audioAttivo != null &&
-              _isPlaying) {
+              _audioAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
-            if (!kIsWeb && Platform.isAndroid) {
-              _aggiornaPosizioneService(pos, _durata);
-            }
-            _aggiornaNowPlaying(_displayName(_audioAttivo!), _isPlaying);
+            if (!kIsWeb && Platform.isAndroid) _aggiornaPosizioneService(pos, _durata);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), _isPlaying);
           }
         }
       });
@@ -140,16 +139,11 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
 
       _player.processingStateStream.listen((state) {
         if (state == ProcessingState.completed && mounted) {
-          setState(() {
-            _isPlaying = false;
-            _posizione = Duration.zero;
-          });
+          setState(() { _isPlaying = false; _posizione = Duration.zero; });
           _player.seek(Duration.zero);
           _player.stop();
           _fermaService();
-          if (_isIOS || _isMacOS) {
-            _nowPlayingChannel.invokeMethod('clear');
-          }
+          if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
         }
       });
     }
@@ -159,8 +153,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionCategoryOptions:
-      AVAudioSessionCategoryOptions.allowBluetooth,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.allowBluetooth,
       avAudioSessionMode: AVAudioSessionMode.defaultMode,
       androidAudioAttributes: AndroidAudioAttributes(
         contentType: AndroidAudioContentType.music,
@@ -173,62 +166,39 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   }
 
   Future<void> _avviaService(String titolo) async {
-    try {
-      await _audioServiceChannel.invokeMethod('startService', {
-        'title': titolo,
-        'isPlaying': true,
-      });
-    } catch (e) {
-      debugPrint('Errore avvio service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('startService', {'title': titolo, 'isPlaying': true}); }
+    catch (e) { debugPrint('Errore avvio service: $e'); }
   }
 
   Future<void> _aggiornaService(String titolo, bool isPlaying) async {
     final now = DateTime.now();
     if (now.difference(_ultimoAggiornaService).inMilliseconds < 200) return;
     _ultimoAggiornaService = now;
-    try {
-      await _audioServiceChannel.invokeMethod('updateService', {
-        'title': titolo,
-        'isPlaying': isPlaying,
-      });
-    } catch (e) {
-      debugPrint('Errore aggiornamento service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('updateService', {'title': titolo, 'isPlaying': isPlaying}); }
+    catch (e) { debugPrint('Errore aggiornamento service: $e'); }
   }
 
-  Future<void> _aggiornaPosizioneService(
-      Duration posizione, Duration durata) async {
+  Future<void> _aggiornaPosizioneService(Duration posizione, Duration durata) async {
     try {
       await _audioServiceChannel.invokeMethod('updatePosition', {
-        'positionMs': posizione.inMilliseconds,
-        'durationMs': durata.inMilliseconds,
+        'positionMs': posizione.inMilliseconds, 'durationMs': durata.inMilliseconds,
       });
-    } catch (e) {
-      debugPrint('Errore aggiornamento posizione: $e');
-    }
+    } catch (e) { debugPrint('Errore aggiornamento posizione: $e'); }
   }
 
   Future<void> _aggiornaNowPlaying(String titolo, bool isPlaying) async {
     if (!(_isIOS || _isMacOS)) return;
     try {
       await _nowPlayingChannel.invokeMethod('update', {
-        'title': titolo,
-        'isPlaying': isPlaying,
-        'positionMs': _posizione.inMilliseconds,
-        'durationMs': _durata.inMilliseconds,
+        'title': titolo, 'isPlaying': isPlaying,
+        'positionMs': _posizione.inMilliseconds, 'durationMs': _durata.inMilliseconds,
       });
-    } catch (e) {
-      debugPrint('Errore NowPlaying: $e');
-    }
+    } catch (e) { debugPrint('Errore NowPlaying: $e'); }
   }
 
   Future<void> _fermaService() async {
-    try {
-      await _audioServiceChannel.invokeMethod('stopService');
-    } catch (e) {
-      debugPrint('Errore stop service: $e');
-    }
+    try { await _audioServiceChannel.invokeMethod('stopService'); }
+    catch (e) { debugPrint('Errore stop service: $e'); }
   }
 
   Future<void> _scarica(String nomePdf) async {
@@ -236,41 +206,27 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
     final filename = _nomeAudio(nomePdf);
     final titolo = _displayName(nomePdf);
     final url = Uri.encodeFull(_baseUrl + filename);
-
-    if (_isIOS || _isMacOS) {
+    if (_isIOS || _isMacOS || _isWindows) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
     }
-
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
-        'url': url,
-        'filename': filename,
-        'title': titolo,
+        'url': url, 'filename': filename, 'title': titolo,
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download avviato: $titolo'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Errore download: $e');
-    } finally {
-      if (mounted) setState(() => _isDownloading = false);
-    }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download avviato: $titolo'),
+              duration: const Duration(seconds: 2)));
+    } catch (e) { debugPrint('Errore download: $e'); }
+    finally { if (mounted) setState(() => _isDownloading = false); }
   }
 
   @override
   void dispose() {
-    if (!_useExternalPlayer) {
+    if (!_useExternalPlayer && !_isWindows) {
       _fermaService();
-      if (_isIOS || _isMacOS) {
-        _nowPlayingChannel.invokeMethod('clear');
-      }
+      if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
       _player.dispose();
     }
     super.dispose();
@@ -280,40 +236,31 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   String _nomeAudio(String nomePdf) => nomePdf.replaceAll('.pdf', '.mp3');
 
   Future<void> _riproduci(String nomePdf) async {
+    if (_isWindows) {
+      setState(() => _audioAttivo = nomePdf);
+      return;
+    }
     final filename = _nomeAudio(nomePdf);
     final titolo = _displayName(nomePdf);
-
     try {
       if (_audioAttivo == nomePdf) {
-        if (_isPlaying) {
-          await _player.pause();
-        } else {
-          await _player.play();
-        }
+        if (_isPlaying) await _player.pause();
+        else await _player.play();
         return;
       }
       setState(() {
-        _audioAttivo = nomePdf;
-        _isLoading = true;
-        _posizione = Duration.zero;
-        _durata = Duration.zero;
+        _audioAttivo = nomePdf; _isLoading = true;
+        _posizione = Duration.zero; _durata = Duration.zero;
       });
       final url = Uri.encodeFull(_baseUrl + filename);
-      if (!(_isIOS || _isMacOS)) {
-        await _avviaService(titolo);
-      }
+      if (!(_isIOS || _isMacOS)) await _avviaService(titolo);
       await _player.setUrl(url);
       await _player.play();
-      if (_isIOS || _isMacOS) {
-        await _aggiornaNowPlaying(titolo, true);
-      }
+      if (_isIOS || _isMacOS) await _aggiornaNowPlaying(titolo, true);
     } catch (e) {
       debugPrint('ERRORE RIPRODUZIONE: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Errore nella riproduzione')),
-        );
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Errore nella riproduzione')));
     }
   }
 
@@ -325,329 +272,398 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<AppThemeProvider>();
+    final tema = provider.tema;
+    final isModerno = tema != AppTema.classico;
+    final isDesktop = MediaQuery.of(context).size.width > 1000;
+    final sfondo = isDesktop ? provider.sfondoDesktop : provider.sfondoMobile;
+    final fontSize = provider.fontSizeBottone;
+
+    final Color kBottoneColore;
+    final Color kBottoneBordo;
+    final Color kAttivoColore;
+    final Color kPlayerColore;
+    final Color kAppBarColore;
+    final Color kTestoColore;
+    final Color kTestoSecColore;
+    final Color kSliderAttivo;
+    final Color kSliderInattivo;
+    final Color kDivisoreColore;
+    final Color kSfondoRiga;
+
+    switch (tema) {
+      case AppTema.classico:
+        kBottoneColore = _kBottoneClassico;
+        kBottoneBordo = _kBottoneClassico;
+        kAttivoColore = _kAttivoClassico;
+        kPlayerColore = _kPlayerClassico;
+        kAppBarColore = _kAppBarClassico;
+        kTestoColore = Colors.white;
+        kTestoSecColore = Colors.white70;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.transparent;
+        break;
+      case AppTema.modernoScuro:
+        kBottoneColore = Colors.transparent;
+        kBottoneBordo = Colors.transparent;
+        kAttivoColore = Colors.white.withOpacity(0.08);
+        kPlayerColore = _kPlayerScuro;
+        kAppBarColore = _kAppBarScuro;
+        kTestoColore = Colors.white;
+        kTestoSecColore = Colors.white60;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.black.withOpacity(0.25);
+        break;
+      case AppTema.modernoChiaro:
+        kBottoneColore = Colors.transparent;
+        kBottoneBordo = Colors.transparent;
+        kAttivoColore = Colors.black.withOpacity(0.08);
+        kPlayerColore = _kPlayerChiaro;
+        kAppBarColore = _kAppBarChiaro;
+        kTestoColore = const Color(0xFF1A0A00);
+        kTestoSecColore = const Color(0xFF5C3D1E);
+        kSliderAttivo = const Color(0xFF7B4F2E);
+        kSliderInattivo = const Color(0xFFD4A574);
+        kDivisoreColore = const Color(0x445C3D1E);
+        kSfondoRiga = Colors.white.withOpacity(0.45);
+        break;
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(widget.categoria.titolo),
+        backgroundColor: kAppBarColore,
+        foregroundColor: kTestoColore,
+        elevation: 0,
+        title: Text(widget.categoria.titolo,
+            style: TextStyle(color: kTestoColore,
+                fontWeight: FontWeight.w600, fontStyle: FontStyle.italic)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: kTestoColore),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/sfondo3.png'),
-            fit: BoxFit.cover,
-          ),
+        decoration: BoxDecoration(
+          image: DecorationImage(image: AssetImage(sfondo), fit: BoxFit.cover),
         ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: widget.categoria.voci.isEmpty
-                ? Center(
-              child: Text(
-                'Nessun contenuto disponibile',
-                style:
-                TextStyle(fontSize: 16, color: Colors.grey[700]),
-              ),
-            )
-                : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 24),
-                    itemCount: widget.categoria.voci.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            widget.categoria.titolo,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ),
-                        );
-                      }
-                      final voce = widget.categoria.voci[index - 1];
-                      final isAttivo = _audioAttivo == voce.nomePdf;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                            top: index == 1 ? 12 : 4),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Material(
-                            color: isAttivo && !_useExternalPlayer
-                                ? const Color(0xFF0F1BA0)
-                                : const Color(0xFF1829E8),
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: InkWell(
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              PdfViewerScreen(
-                                                nomePdf: voce.nomePdf,
-                                                titolo: voce.titolo,
-                                              ),
-                                        ),
-                                      ),
-                                      child: Padding(
-                                        padding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 14),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons
-                                                  .picture_as_pdf_rounded,
-                                              size: 16,
-                                              color: Colors.white60,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                _titoloVisualizzato(
-                                                    voce.titolo)
-                                                    .toUpperCase(),
-                                                textAlign:
-                                                TextAlign.center,
-                                                softWrap: true,
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                  fontWeight: isAttivo &&
-                                                      !_useExternalPlayer
-                                                      ? FontWeight.bold
-                                                      : FontWeight.normal,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                      width: 1,
-                                      color: Colors.white24),
-                                  InkWell(
-                                    onTap: () =>
-                                        _riproduci(voce.nomePdf),
-                                    child: SizedBox(
-                                      width: 48,
-                                      child: Center(
-                                        child: isAttivo &&
-                                            _isLoading &&
-                                            !_useExternalPlayer
-                                            ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child:
-                                          CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                            : Icon(
-                                          isAttivo &&
-                                              _isPlaying &&
-                                              !_useExternalPlayer
-                                              ? Icons
-                                              .pause_circle_outline_rounded
-                                              : Icons
-                                              .record_voice_over_rounded,
-                                          size: 20,
-                                          color: isAttivo &&
-                                              !_useExternalPlayer
-                                              ? Colors.white
-                                              : Colors.white70,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Mini player
-                if (_audioAttivo != null && !_useExternalPlayer)
-                  Container(
-                    decoration: BoxDecoration(
-                      color:
-                      const Color(0xFF1829E8).withOpacity(0.97),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    padding: EdgeInsets.fromLTRB(
-                        16,
-                        10,
-                        16,
-                        16 + MediaQuery.of(context).padding.bottom),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                _displayName(_audioAttivo!),
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            // Bottone download nel player
-                            GestureDetector(
-                              onTap: () => _scarica(_audioAttivo!),
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: _isDownloading
-                                    ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white54,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                    : const Icon(
-                                  Icons.download_rounded,
-                                  color: Colors.white60,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(
-                                enabledThumbRadius: 6),
-                            overlayShape:
-                            const RoundSliderOverlayShape(
-                                overlayRadius: 12),
-                            activeTrackColor: Colors.white,
-                            inactiveTrackColor: Colors.white30,
-                            thumbColor: Colors.white,
-                            overlayColor: Colors.white24,
-                          ),
-                          child: Slider(
-                            value: _durata.inMilliseconds > 0
-                                ? _posizione.inMilliseconds
-                                .clamp(0, _durata.inMilliseconds)
-                                .toDouble()
-                                : 0,
-                            min: 0,
-                            max: _durata.inMilliseconds > 0
-                                ? _durata.inMilliseconds.toDouble()
-                                : 1,
-                            onChanged: (val) {
-                              _player.seek(Duration(
-                                  milliseconds: val.toInt()));
-                            },
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              _formatDuration(_posizione),
-                              style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 11),
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: const Icon(Icons.replay_10,
-                                  color: Colors.white70, size: 26),
-                              onPressed: () {
-                                final newPos = _posizione -
-                                    const Duration(seconds: 10);
-                                _player.seek(newPos < Duration.zero
-                                    ? Duration.zero
-                                    : newPos);
-                              },
-                            ),
-                            _isLoading
-                                ? const SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                                : IconButton(
-                              icon: Icon(
-                                _isPlaying
-                                    ? Icons.pause_circle_filled
-                                    : Icons.play_circle_filled,
-                                color: Colors.white,
-                                size: 44,
-                              ),
-                              onPressed: () {
-                                if (_isPlaying) {
-                                  _player.pause();
-                                } else {
-                                  _player.play();
-                                }
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.forward_10,
-                                  color: Colors.white70, size: 26),
-                              onPressed: () {
-                                final newPos = _posizione +
-                                    const Duration(seconds: 10);
-                                if (newPos < _durata)
-                                  _player.seek(newPos);
-                              },
-                            ),
-                            const Spacer(),
-                            Text(
-                              _formatDuration(_durata),
-                              style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 11),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(provider.gradienteTop),
+                Colors.black.withOpacity(provider.gradienteBottom),
               ],
             ),
+          ),
+          // ── COLONNA ESTERNA senza maxWidth — player Windows largo tutta la finestra
+          child: widget.categoria.voci.isEmpty
+              ? Center(child: Text('Nessun contenuto disponibile',
+              style: TextStyle(fontSize: 16, color: kTestoSecColore)))
+              : Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 24),
+                      itemCount: widget.categoria.voci.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Text(widget.categoria.titolo,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.bold,
+                                  fontStyle: FontStyle.italic,
+                                  color: kTestoColore,
+                                  shadows: tema == AppTema.modernoChiaro
+                                      ? [] : const [Shadow(blurRadius: 6, color: Colors.black54)],
+                                )),
+                          );
+                        }
+                        final voce = widget.categoria.voci[index - 1];
+                        final isAttivo = _audioAttivo == voce.nomePdf;
+                        final isUltimo = index == widget.categoria.voci.length;
+
+                        if (isModerno) {
+                          return Container(
+                            color: isAttivo ? kAttivoColore : kSfondoRiga,
+                            child: Column(
+                              children: [
+                                IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () => Navigator.push(context,
+                                              MaterialPageRoute(builder: (_) =>
+                                                  PdfViewerScreen(
+                                                      nomePdf: voce.nomePdf,
+                                                      titolo: voce.titolo))),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 4, vertical: 14),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 6, height: 6,
+                                                  margin: const EdgeInsets.only(right: 12),
+                                                  decoration: BoxDecoration(
+                                                    color: isAttivo ? kTestoColore : kTestoSecColore,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    _titoloVisualizzato(voce.titolo),
+                                                    softWrap: true,
+                                                    style: TextStyle(
+                                                      color: kTestoColore,
+                                                      fontSize: fontSize,
+                                                      fontWeight: isAttivo
+                                                          ? FontWeight.bold : FontWeight.normal,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      InkWell(
+                                        onTap: () => Navigator.push(context,
+                                            MaterialPageRoute(builder: (_) =>
+                                                PdfViewerScreen(
+                                                    nomePdf: voce.nomePdf,
+                                                    titolo: voce.titolo))),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 14),
+                                          child: Icon(Icons.picture_as_pdf_rounded,
+                                              size: 20, color: kTestoSecColore),
+                                        ),
+                                      ),
+                                      InkWell(
+                                        onTap: () => _riproduci(voce.nomePdf),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 14),
+                                          child: isAttivo && _isLoading && !_isWindows
+                                              ? SizedBox(width: 20, height: 20,
+                                              child: CircularProgressIndicator(
+                                                  color: kTestoColore, strokeWidth: 2))
+                                              : Icon(
+                                              isAttivo && _isPlaying && !_isWindows
+                                                  ? Icons.pause_circle_outline_rounded
+                                                  : Icons.play_circle_outline_rounded,
+                                              size: 24,
+                                              color: isAttivo ? kTestoColore : kTestoSecColore),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (!isUltimo)
+                                  Divider(height: 1, thickness: 1, color: kDivisoreColore),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return Padding(
+                            padding: EdgeInsets.only(top: index == 1 ? 12 : 4),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Material(
+                                color: isAttivo ? kAttivoColore : kBottoneColore,
+                                child: IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                                    children: [
+                                      Expanded(
+                                        child: InkWell(
+                                          onTap: () => Navigator.push(context,
+                                              MaterialPageRoute(builder: (_) =>
+                                                  PdfViewerScreen(
+                                                      nomePdf: voce.nomePdf,
+                                                      titolo: voce.titolo))),
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 14),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Icon(Icons.picture_as_pdf_rounded,
+                                                    size: 16, color: kTestoSecColore),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    _titoloVisualizzato(voce.titolo).toUpperCase(),
+                                                    textAlign: TextAlign.center,
+                                                    softWrap: true,
+                                                    style: TextStyle(
+                                                      color: kTestoColore,
+                                                      fontSize: fontSize,
+                                                      fontWeight: isAttivo
+                                                          ? FontWeight.bold : FontWeight.normal,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(width: 1, color: kBottoneBordo),
+                                      InkWell(
+                                        onTap: () => _riproduci(voce.nomePdf),
+                                        child: SizedBox(
+                                          width: 48,
+                                          child: Center(
+                                            child: isAttivo && _isLoading && !_isWindows
+                                                ? SizedBox(width: 18, height: 18,
+                                                child: CircularProgressIndicator(
+                                                    color: kTestoColore, strokeWidth: 2))
+                                                : Icon(
+                                                isAttivo && _isPlaying && !_isWindows
+                                                    ? Icons.pause_circle_outline_rounded
+                                                    : Icons.record_voice_over_rounded,
+                                                size: 20,
+                                                color: isAttivo ? kTestoColore : kTestoSecColore),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              // ── PLAYER — fuori dal ConstrainedBox, largo tutta la finestra
+              if (_audioAttivo != null)
+                _isWindows
+                    ? WebviewAudioPlayerWindows(
+                  audioUrl: Uri.encodeFull(
+                      _baseUrl + _nomeAudio(_audioAttivo!)),
+                  titolo: _displayName(_audioAttivo!),
+                  playerColore: kPlayerColore,
+                  testoColore: kTestoColore,
+                  testoSecColore: kTestoSecColore,
+                )
+                    : Container(
+                  decoration: BoxDecoration(
+                    color: kPlayerColore,
+                    boxShadow: [BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 12, offset: const Offset(0, -4))],
+                  ),
+                  padding: EdgeInsets.fromLTRB(
+                      16, 10, 16, 16 + MediaQuery.of(context).padding.bottom),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(_displayName(_audioAttivo!),
+                                textAlign: TextAlign.center,
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: kTestoColore,
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                          ),
+                          GestureDetector(
+                            onTap: () => _scarica(_audioAttivo!),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: _isDownloading
+                                  ? SizedBox(width: 18, height: 18,
+                                  child: CircularProgressIndicator(
+                                      color: kTestoSecColore, strokeWidth: 2))
+                                  : Icon(Icons.download_rounded,
+                                  color: kTestoSecColore, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          activeTrackColor: kSliderAttivo,
+                          inactiveTrackColor: kSliderInattivo,
+                          thumbColor: kTestoColore,
+                          overlayColor: kTestoColore.withOpacity(0.2),
+                        ),
+                        child: Slider(
+                          value: _durata.inMilliseconds > 0
+                              ? _posizione.inMilliseconds
+                              .clamp(0, _durata.inMilliseconds).toDouble() : 0,
+                          min: 0,
+                          max: _durata.inMilliseconds > 0
+                              ? _durata.inMilliseconds.toDouble() : 1,
+                          onChanged: (val) =>
+                              _player.seek(Duration(milliseconds: val.toInt())),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(_formatDuration(_posizione),
+                              style: TextStyle(color: kTestoSecColore, fontSize: 11)),
+                          const Spacer(),
+                          IconButton(
+                            icon: Icon(Icons.replay_10, color: kTestoSecColore, size: 26),
+                            onPressed: () {
+                              final newPos = _posizione - const Duration(seconds: 10);
+                              _player.seek(newPos < Duration.zero ? Duration.zero : newPos);
+                            },
+                          ),
+                          _isLoading
+                              ? SizedBox(width: 40, height: 40,
+                              child: CircularProgressIndicator(
+                                  color: kTestoColore, strokeWidth: 2))
+                              : IconButton(
+                              icon: Icon(_isPlaying
+                                  ? Icons.pause_circle_filled
+                                  : Icons.play_circle_filled,
+                                  color: kTestoColore, size: 44),
+                              onPressed: () {
+                                if (_isPlaying) _player.pause();
+                                else _player.play();
+                              }),
+                          IconButton(
+                            icon: Icon(Icons.forward_10, color: kTestoSecColore, size: 26),
+                            onPressed: () {
+                              final newPos = _posizione + const Duration(seconds: 10);
+                              if (newPos < _durata) _player.seek(newPos);
+                            },
+                          ),
+                          const Spacer(),
+                          Text(_formatDuration(_durata),
+                              style: TextStyle(color: kTestoSecColore, fontSize: 11)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ),
       ),

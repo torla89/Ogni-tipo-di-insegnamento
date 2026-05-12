@@ -7,6 +7,10 @@ import 'package:audio_session/audio_session.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../data/categorie.dart';
 
+const _kBottoneColore = Color(0x26FFFFFF);
+const _kBottoneBordo = Color(0x55FFFFFF);
+const _kPlayerColore = Color(0xDD000000);
+
 class LeggiStudiScreen extends StatefulWidget {
   final List<VocePdf> voci;
   final String titoloCategoria;
@@ -110,8 +114,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
           setState(() => _posizione = pos);
           final now = DateTime.now();
           if (now.difference(_ultimoAggiornaPosizioneService).inSeconds >= 5 &&
-              _audioAttivo != null &&
-              _isPlaying) {
+              _audioAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
             if (!kIsWeb && Platform.isAndroid) {
               _aggiornaPosizioneService(pos, _durata);
@@ -244,13 +247,8 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
     });
   }
 
-  String _displayName(String nomePdf) {
-    return nomePdf.replaceAll('.pdf', '');
-  }
-
-  String _nomeAudio(String nomePdf) {
-    return nomePdf.replaceAll('.pdf', '.mp3');
-  }
+  String _displayName(String nomePdf) => nomePdf.replaceAll('.pdf', '');
+  String _nomeAudio(String nomePdf) => nomePdf.replaceAll('.pdf', '.mp3');
 
   Future<void> _riproduci(String nomePdf) async {
     final filename = _nomeAudio(nomePdf);
@@ -307,6 +305,9 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 1000;
     final fontSize = isDesktop ? 13.0 : 14.0;
+    final sfondo = isDesktop
+        ? 'assets/sfondo_home_desktop.jpeg'
+        : 'assets/sfondo_home.jpeg';
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -318,9 +319,9 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
         ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/sfondo_home.jpeg'),
+            image: AssetImage(sfondo),
             fit: BoxFit.cover,
           ),
         ),
@@ -330,8 +331,8 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.35),
-                Colors.black.withOpacity(0.6),
+                Colors.black.withOpacity(0.25),
+                Colors.black.withOpacity(0.5),
               ],
             ),
           ),
@@ -376,8 +377,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                                 TextField(
                                   controller: _controller,
                                   onChanged: _cerca,
-                                  style:
-                                  const TextStyle(color: Colors.white),
+                                  style: const TextStyle(color: Colors.white),
                                   decoration: InputDecoration(
                                     hintText: 'Cerca studio...',
                                     hintStyle: const TextStyle(
@@ -396,11 +396,18 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                                         : null,
                                     filled: true,
                                     fillColor:
-                                    Colors.white.withOpacity(0.15),
-                                    border: OutlineInputBorder(
+                                    Colors.black.withOpacity(0.2),
+                                    enabledBorder: OutlineInputBorder(
                                       borderRadius:
                                       BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
+                                      borderSide: const BorderSide(
+                                          color: _kBottoneBordo, width: 1),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius:
+                                      BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: Colors.white54, width: 1.5),
                                     ),
                                     contentPadding:
                                     const EdgeInsets.symmetric(
@@ -418,8 +425,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                             child: Text(
                               'Nessun risultato',
                               style: TextStyle(
-                                  color: Colors.white60,
-                                  fontSize: 16),
+                                  color: Colors.white60, fontSize: 16),
                             ),
                           ),
                         )
@@ -428,8 +434,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                               16,
                               0,
                               16,
-                              _audioAttivo != null &&
-                                  !_useExternalPlayer
+                              _audioAttivo != null && !_useExternalPlayer
                                   ? 8
                                   : 24),
                           sliver: SliverList(
@@ -441,87 +446,71 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                                 return Padding(
                                   padding: const EdgeInsets.only(
                                       bottom: 6),
-                                  child: SizedBox(
-                                    height: 52,
-                                    child: ClipRRect(
-                                      borderRadius:
-                                      BorderRadius.circular(12),
-                                      child: Material(
-                                        color: (isAttivo &&
-                                            !_useExternalPlayer
-                                            ? const Color(
-                                            0xFF4A0072)
-                                            : const Color(
-                                            0xFF7B1FA2))
-                                            .withOpacity(isAttivo &&
-                                            !_useExternalPlayer
-                                            ? 0.95
-                                            : 0.88),
-                                        child: InkWell(
-                                          onTap: () => _riproduci(
-                                              voce.nomePdf),
-                                          child: Padding(
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                horizontal: 12),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                              MainAxisAlignment
-                                                  .center,
-                                              children: [
-                                                if (isAttivo &&
-                                                    _isLoading &&
-                                                    !_useExternalPlayer)
-                                                  const SizedBox(
-                                                    width: 20,
-                                                    height: 20,
-                                                    child:
-                                                    CircularProgressIndicator(
-                                                      color:
-                                                      Colors.white,
-                                                      strokeWidth: 2,
-                                                    ),
-                                                  )
-                                                else
-                                                  Icon(
-                                                    isAttivo &&
-                                                        _isPlaying &&
-                                                        !_useExternalPlayer
-                                                        ? Icons
-                                                        .pause_circle_outline_rounded
-                                                        : Icons
-                                                        .play_circle_outline_rounded,
-                                                    size: 20,
-                                                    color: Colors.white,
-                                                  ),
+                                  child: ClipRRect(
+                                    borderRadius:
+                                    BorderRadius.circular(12),
+                                    child: Material(
+                                      color: isAttivo &&
+                                          !_useExternalPlayer
+                                          ? Colors.black
+                                          .withOpacity(0.65)
+                                          : _kBottoneColore,
+                                      child: InkWell(
+                                        onTap: () =>
+                                            _riproduci(voce.nomePdf),
+                                        child: Padding(
+                                          padding: const EdgeInsets
+                                              .symmetric(
+                                              horizontal: 12,
+                                              vertical: 14),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                            children: [
+                                              if (isAttivo &&
+                                                  _isLoading &&
+                                                  !_useExternalPlayer)
                                                 const SizedBox(
-                                                    width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    _displayName(
-                                                        voce.nomePdf)
-                                                        .toUpperCase(),
-                                                    textAlign: TextAlign
-                                                        .center,
-                                                    style: TextStyle(
-                                                      fontSize:
-                                                      fontSize,
-                                                      color:
-                                                      Colors.white,
-                                                      fontWeight: isAttivo &&
-                                                          !_useExternalPlayer
-                                                          ? FontWeight
-                                                          .bold
-                                                          : FontWeight
-                                                          .normal,
-                                                    ),
-                                                    overflow:
-                                                    TextOverflow
-                                                        .ellipsis,
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                  CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              else
+                                                Icon(
+                                                  isAttivo &&
+                                                      _isPlaying &&
+                                                      !_useExternalPlayer
+                                                      ? Icons
+                                                      .pause_circle_outline_rounded
+                                                      : Icons
+                                                      .play_circle_outline_rounded,
+                                                  size: 20,
+                                                  color: Colors.white,
+                                                ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  _displayName(
+                                                      voce.nomePdf),
+                                                  textAlign:
+                                                  TextAlign.center,
+                                                  softWrap: true,
+                                                  style: TextStyle(
+                                                    fontSize: fontSize,
+                                                    color: Colors.white,
+                                                    fontWeight: isAttivo &&
+                                                        !_useExternalPlayer
+                                                        ? FontWeight.bold
+                                                        : FontWeight
+                                                        .normal,
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -536,12 +525,10 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                       ],
                     ),
                   ),
-
-                  // Mini player
                   if (_audioAttivo != null && !_useExternalPlayer)
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF2D0045).withOpacity(0.97),
+                        color: _kPlayerColore,
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.4),
@@ -577,8 +564,8 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                                   enabledThumbRadius: 6),
                               overlayShape: const RoundSliderOverlayShape(
                                   overlayRadius: 12),
-                              activeTrackColor: const Color(0xFFCE93D8),
-                              inactiveTrackColor: Colors.white24,
+                              activeTrackColor: Colors.white,
+                              inactiveTrackColor: Colors.white30,
                               thumbColor: Colors.white,
                               overlayColor: Colors.white24,
                             ),
@@ -603,7 +590,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                               Text(
                                 _formatDuration(_posizione),
                                 style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
+                                    color: Colors.white70, fontSize: 11),
                               ),
                               const Spacer(),
                               IconButton(
@@ -656,7 +643,7 @@ class _LeggiStudiScreenState extends State<LeggiStudiScreen> {
                               Text(
                                 _formatDuration(_durata),
                                 style: const TextStyle(
-                                    color: Colors.white60, fontSize: 11),
+                                    color: Colors.white70, fontSize: 11),
                               ),
                             ],
                           ),

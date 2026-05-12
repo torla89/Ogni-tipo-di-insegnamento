@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:ogni_tipo_di_insegnamento/screens/home_screen.dart';
+import 'theme_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Color(0xFF1829E8),
+    statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -29,12 +36,13 @@ class MyApp extends StatelessWidget {
       locale: const Locale('it'),
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        primaryColor: const Color(0xFF1829E8),
+        primaryColor: Colors.black,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1829E8),
+          backgroundColor: Color(0xCC000000),
           foregroundColor: Colors.white,
+          elevation: 0,
           systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: Color(0xFF1829E8),
+            statusBarColor: Colors.transparent,
             statusBarIconBrightness: Brightness.light,
           ),
         ),
