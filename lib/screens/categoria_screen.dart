@@ -82,28 +82,30 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   bool get _isWindows => !kIsWeb && Platform.isWindows;
   bool get _isMacOS => !kIsWeb && Platform.isMacOS;
   bool get _isIOS => !kIsWeb && Platform.isIOS;
-  bool get _useExternalPlayer => kIsWeb;
 
   @override
   void initState() {
     super.initState();
-    if (!_useExternalPlayer && !_isWindows) {
+    // Inizializza player su tutte le piattaforme tranne Windows
+    if (!_isWindows) {
       _configuraAudioSession();
-      _playerControlChannel.setMethodCallHandler((call) async {
-        if (!mounted) return;
-        switch (call.method) {
-          case 'play': await _player.play(); break;
-          case 'pause': await _player.pause(); break;
-          case 'togglePlayPause':
-            if (_isPlaying) await _player.pause();
-            else await _player.play();
-            break;
-          case 'seekTo':
-            final posMs = call.arguments as int?;
-            if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
-            break;
-        }
-      });
+      if (!kIsWeb) {
+        _playerControlChannel.setMethodCallHandler((call) async {
+          if (!mounted) return;
+          switch (call.method) {
+            case 'play': await _player.play(); break;
+            case 'pause': await _player.pause(); break;
+            case 'togglePlayPause':
+              if (_isPlaying) await _player.pause();
+              else await _player.play();
+              break;
+            case 'seekTo':
+              final posMs = call.arguments as int?;
+              if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
+              break;
+          }
+        });
+      }
 
       _player.playerStateStream.listen((state) {
         if (mounted) {
@@ -114,7 +116,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                 state.processingState == ProcessingState.buffering;
           });
           if (state.playing != wasPlaying && _audioAttivo != null) {
-            _aggiornaService(_displayName(_audioAttivo!), state.playing);
+            if (!kIsWeb) _aggiornaService(_displayName(_audioAttivo!), state.playing);
             if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
           }
         }
@@ -142,7 +144,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
           setState(() { _isPlaying = false; _posizione = Duration.zero; });
           _player.seek(Duration.zero);
           _player.stop();
-          _fermaService();
+          if (!kIsWeb) _fermaService();
           if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
         }
       });
@@ -150,6 +152,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   }
 
   Future<void> _configuraAudioSession() async {
+    if (kIsWeb) return;
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
@@ -166,11 +169,13 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   }
 
   Future<void> _avviaService(String titolo) async {
+    if (kIsWeb) return;
     try { await _audioServiceChannel.invokeMethod('startService', {'title': titolo, 'isPlaying': true}); }
     catch (e) { debugPrint('Errore avvio service: $e'); }
   }
 
   Future<void> _aggiornaService(String titolo, bool isPlaying) async {
+    if (kIsWeb) return;
     final now = DateTime.now();
     if (now.difference(_ultimoAggiornaService).inMilliseconds < 200) return;
     _ultimoAggiornaService = now;
@@ -197,6 +202,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   }
 
   Future<void> _fermaService() async {
+    if (kIsWeb) return;
     try { await _audioServiceChannel.invokeMethod('stopService'); }
     catch (e) { debugPrint('Errore stop service: $e'); }
   }
@@ -210,6 +216,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
     }
+    if (kIsWeb) return;
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
@@ -224,8 +231,9 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
 
   @override
   void dispose() {
-    if (!_useExternalPlayer && !_isWindows) {
-      _fermaService();
+    // Ferma sempre il player al dispose su tutte le piattaforme tranne Windows
+    if (!_isWindows) {
+      if (!kIsWeb) _fermaService();
       if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
       _player.dispose();
     }
@@ -253,7 +261,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
         _posizione = Duration.zero; _durata = Duration.zero;
       });
       final url = Uri.encodeFull(_baseUrl + filename);
-      if (!(_isIOS || _isMacOS)) await _avviaService(titolo);
+      if (!kIsWeb && !(_isIOS || _isMacOS)) await _avviaService(titolo);
       await _player.setUrl(url);
       await _player.play();
       if (_isIOS || _isMacOS) await _aggiornaNowPlaying(titolo, true);
@@ -333,6 +341,9 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
         break;
     }
 
+    final bool mostraPlayerWindows = _isWindows && _audioAttivo != null;
+    final bool mostraPlayerFlutter = !_isWindows && _audioAttivo != null;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -362,7 +373,6 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
               ],
             ),
           ),
-          // ── COLONNA ESTERNA senza maxWidth — player Windows largo tutta la finestra
           child: widget.categoria.voci.isEmpty
               ? Center(child: Text('Nessun contenuto disponibile',
               style: TextStyle(fontSize: 16, color: kTestoSecColore)))
@@ -555,18 +565,19 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                   ),
                 ),
               ),
-              // ── PLAYER — fuori dal ConstrainedBox, largo tutta la finestra
-              if (_audioAttivo != null)
-                _isWindows
-                    ? WebviewAudioPlayerWindows(
+              // Player Windows (webview)
+              if (mostraPlayerWindows)
+                WebviewAudioPlayerWindows(
                   audioUrl: Uri.encodeFull(
                       _baseUrl + _nomeAudio(_audioAttivo!)),
                   titolo: _displayName(_audioAttivo!),
                   playerColore: kPlayerColore,
                   testoColore: kTestoColore,
                   testoSecColore: kTestoSecColore,
-                )
-                    : Container(
+                ),
+              // Player Flutter (Android, iOS, macOS, Web)
+              if (mostraPlayerFlutter)
+                Container(
                   decoration: BoxDecoration(
                     color: kPlayerColore,
                     boxShadow: [BoxShadow(
