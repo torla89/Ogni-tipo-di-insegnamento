@@ -1,0 +1,117 @@
+[
+  {
+    "versione": "26.05.06",
+    "data": "Maggio 2026",
+    "novita": [
+      "Aggiunto due nuovi temi grafici per personalizzare l’aspetto dell’app. ",
+      "Aggiunta la modalità tema moderno automatico che cambia il tema in base alla luce esterna ",
+      "Aggiunto modalità lettura con caratteri più grandi"
+    ]
+  },
+  {
+    "versione": "26.05.04",
+    "data": "Maggio 2026",
+    "novita": [
+      "Aggiunto bottone spotify nella homepage",
+      "Sistemato la sezione podcast"
+    ]
+  },
+  {
+    "versione": "26.05.03",
+    "data": "Maggio 2026",
+    "novita": [
+      "Aggiunto player audio per la lettura degli studi",
+      "Aggiunto bottone voce in ogni studio e nella ricerca",
+      "Aggiunto download audio studi",
+      "Inserito bottone info versione",
+      "Testo bottoni studi va a capo automaticamente"
+    ]
+  },
+  {
+    "versione": "26.04.04",
+    "data": "Aprile 2026",
+    "novita": [
+      "Corretto problema nei podcast che si bloccava quando si bloccava lo schermo",
+      "Inserito pulsante download nei podcast",
+      "Risolto alcuni problemi grafici",
+      "Risolto qualche errore di battitura",
+      "Inserito controllo riproduzione podcast da smartwatch"
+    ]
+  },
+  {
+    "versione": "26.04.01",
+    "data": "Aprile 2026",
+    "novita": [
+      "Risolto gravi errori ortografia nei pulsanti",
+      "Inserito video Ellero che racconta la sua conversione",
+      "Inserito podcast",
+      "Sostituito link privacy",
+      "Sostituito link assistenza",
+      "Sistemata lingua visualizzata nello store"
+    ]
+  },
+  {
+    "versione": "26.03.06",
+    "data": "Marzo 2026",
+    "novita": [
+      "Prima versione pubblica su App Store iOS",
+      "Versione multipiattaforma Android, iOS, macOS, Windows, Web",
+      "Correzione errore apertura alcuni studi"
+    ]
+  },
+  {
+    "versione": "26.03.05",
+    "data": "Marzo 2026",
+    "novita": [
+      "Rimodernamento sezione segnalazioni",
+      "Rimodernamento sezione download con store ufficiali"
+    ]
+  },
+  {
+    "versione": "26.02.05",
+    "data": "Febbraio 2026",
+    "novita": [
+      "Inserito pulsante cerca per parole chiave"
+    ]
+  },
+  {
+    "versione": "26.02.04",
+    "data": "Febbraio 2026",
+    "novita": [
+      "Lettura PDF mediante app esterna",
+      "Miglioramenti grafici interfaccia"
+    ]
+  },
+  {
+    "versione": "26.02.03",
+    "data": "Febbraio 2026",
+    "novita": [
+      "Aggiornato ad API 36",
+      "Piccole modifiche nel layout delle pagine",
+      "Implementato supporto le dimensioni delle pagine di memoria di 16 kB"
+    ]
+  },
+  {
+    "versione": "24.11.01",
+    "data": "Novembre 2024",
+    "novita": [
+      "Aggiornato API"
+    ]
+  },
+  {
+    "versione": "21.09.01",
+    "data": "Settembre 2021",
+    "novita": [
+      "Correzione errori ortografici"
+    ]
+  },
+  {
+    "versione": "20.05.08",
+    "data": "Maggio 2020",
+    "novita": [
+      "Prima versione pubblica su Google Play",
+      "Prima versione pubblica su App Gallery",
+      "Inserito tutti gli studi, visualizzabili tramite un player interno all'app"
+    ]
+  }
+]
