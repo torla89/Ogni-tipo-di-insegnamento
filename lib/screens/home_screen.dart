@@ -33,8 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (_) => StatefulBuilder(
         builder: (context, setModalState) {
           final provider = context.watch<AppThemeProvider>();
-          final tema = provider.tema;
+          final temaImpostato = provider.temaImpostato;
           final testoGrande = provider.testoGrande;
+          final isAutomatico = temaImpostato == AppTema.automatico;
+
           return Container(
             decoration: const BoxDecoration(
               color: Color(0xFF1A1A2E),
@@ -57,29 +59,101 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                 ),
                 const SizedBox(height: 10),
+
+                // ── Classico ─────────────────────────────────────
                 _buildOpzioneTema(
                   titolo: 'Classico',
                   descrizione: 'Bottoni colorati su sfondo scuro',
                   icona: Icons.palette,
-                  selezionato: tema == AppTema.classico,
+                  selezionato: temaImpostato == AppTema.classico,
                   onTap: () => context.read<AppThemeProvider>().setTema(AppTema.classico),
                 ),
+
                 const SizedBox(height: 8),
-                _buildOpzioneTema(
-                  titolo: 'Moderno chiaro',
-                  descrizione: 'Sfondo luminoso con bottoni trasparenti',
-                  icona: Icons.wb_sunny_outlined,
-                  selezionato: tema == AppTema.modernoChiaro,
-                  onTap: () => context.read<AppThemeProvider>().setTema(AppTema.modernoChiaro),
+
+                // ── Moderno chiaro e scuro (solo se automatico OFF) ─
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: isAutomatico
+                      ? const SizedBox.shrink()
+                      : Column(
+                    children: [
+                      _buildOpzioneTema(
+                        titolo: 'Moderno chiaro',
+                        descrizione: 'Sfondo luminoso con bottoni trasparenti',
+                        icona: Icons.wb_sunny_outlined,
+                        selezionato: temaImpostato == AppTema.modernoChiaro,
+                        onTap: () => context.read<AppThemeProvider>()
+                            .setTema(AppTema.modernoChiaro),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildOpzioneTema(
+                        titolo: 'Moderno scuro',
+                        descrizione: 'Sfondo notturno con bottoni trasparenti',
+                        icona: Icons.nights_stay_outlined,
+                        selezionato: temaImpostato == AppTema.modernoScuro,
+                        onTap: () => context.read<AppThemeProvider>()
+                            .setTema(AppTema.modernoScuro),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 8),
-                _buildOpzioneTema(
-                  titolo: 'Moderno scuro',
-                  descrizione: 'Sfondo notturno con bottoni trasparenti',
-                  icona: Icons.nights_stay_outlined,
-                  selezionato: tema == AppTema.modernoScuro,
-                  onTap: () => context.read<AppThemeProvider>().setTema(AppTema.modernoScuro),
+
+                // ── Toggle automatico ─────────────────────────────
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: isAutomatico
+                        ? Colors.white.withOpacity(0.15)
+                        : Colors.white.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: isAutomatico ? Colors.white54 : Colors.white12, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.brightness_auto_outlined,
+                          color: isAutomatico ? Colors.white : Colors.white54, size: 24),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Moderno automatico',
+                                style: TextStyle(
+                                    color: isAutomatico ? Colors.white : Colors.white70,
+                                    fontSize: 16, fontWeight: FontWeight.w600)),
+                            const Text('Chiaro di giorno · scuro di notte',
+                                style: TextStyle(color: Colors.white54, fontSize: 12)),
+                            if (isAutomatico)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 4),
+                                child: Text('☀ di giorno tema chiaro   🌙 di notte tema scuro',
+                                    style: TextStyle(color: Colors.white38, fontSize: 11)),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: isAutomatico,
+                        onChanged: (val) {
+                          if (val) {
+                            context.read<AppThemeProvider>().setTema(AppTema.automatico);
+                          } else {
+                            context.read<AppThemeProvider>().setTema(AppTema.modernoChiaro);
+                          }
+                        },
+                        activeColor: Colors.white,
+                        activeTrackColor: Colors.white38,
+                        inactiveThumbColor: Colors.white38,
+                        inactiveTrackColor: Colors.white12,
+                      ),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 24),
                 const Align(
                   alignment: Alignment.centerLeft,
@@ -363,7 +437,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ? Colors.black.withOpacity(0.25)
         : provider.bottoneColore;
 
-    // Classico: titoli in maiuscolo come vecchia versione
     final List<_VoceHome> voci = [
       _VoceHome(
         titoloClassico: 'INTRODUZIONE',

@@ -86,7 +86,6 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   @override
   void initState() {
     super.initState();
-    // Inizializza player su tutte le piattaforme tranne Windows
     if (!_isWindows) {
       _configuraAudioSession();
       if (!kIsWeb) {
@@ -208,22 +207,21 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   }
 
   Future<void> _scarica(String nomePdf) async {
-    if (_isDownloading) return;
     final filename = _nomeAudio(nomePdf);
-    final titolo = _displayName(nomePdf);
     final url = Uri.encodeFull(_baseUrl + filename);
-    if (_isIOS || _isMacOS || _isWindows) {
+    // Web, iOS, macOS, Windows → apri nel browser
+    if (kIsWeb || _isIOS || _isMacOS || _isWindows) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
     }
-    if (kIsWeb) return;
+    if (_isDownloading) return;
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
-        'url': url, 'filename': filename, 'title': titolo,
+        'url': url, 'filename': filename, 'title': _displayName(nomePdf),
       });
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download avviato: $titolo'),
+          SnackBar(content: Text('Download avviato: ${_displayName(nomePdf)}'),
               duration: const Duration(seconds: 2)));
     } catch (e) { debugPrint('Errore download: $e'); }
     finally { if (mounted) setState(() => _isDownloading = false); }
@@ -231,7 +229,6 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
 
   @override
   void dispose() {
-    // Ferma sempre il player al dispose su tutte le piattaforme tranne Windows
     if (!_isWindows) {
       if (!kIsWeb) _fermaService();
       if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
@@ -263,7 +260,12 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
       final url = Uri.encodeFull(_baseUrl + filename);
       if (!kIsWeb && !(_isIOS || _isMacOS)) await _avviaService(titolo);
       await _player.setUrl(url);
-      await _player.play();
+      // Avvia senza await su web per aggirare la restrizione autoplay del browser
+      if (kIsWeb) {
+        _player.play();
+      } else {
+        await _player.play();
+      }
       if (_isIOS || _isMacOS) await _aggiornaNowPlaying(titolo, true);
     } catch (e) {
       debugPrint('ERRORE RIPRODUZIONE: $e');
@@ -300,6 +302,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
+      case AppTema.automatico:
       case AppTema.classico:
         kBottoneColore = _kBottoneClassico;
         kBottoneBordo = _kBottoneClassico;
@@ -565,8 +568,33 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                   ),
                 ),
               ),
-              // Player Windows (webview)
-              if (mostraPlayerWindows)
+              // Player Windows (webview) con bottone download sopra
+              if (mostraPlayerWindows) ...[
+                Container(
+                  color: kPlayerColore,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _scarica(_audioAttivo!),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.download_rounded,
+                                  color: kTestoSecColore, size: 18),
+                              const SizedBox(width: 4),
+                              Text('Scarica',
+                                  style: TextStyle(
+                                      color: kTestoSecColore, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 WebviewAudioPlayerWindows(
                   audioUrl: Uri.encodeFull(
                       _baseUrl + _nomeAudio(_audioAttivo!)),
@@ -575,6 +603,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                   testoColore: kTestoColore,
                   testoSecColore: kTestoSecColore,
                 ),
+              ],
               // Player Flutter (Android, iOS, macOS, Web)
               if (mostraPlayerFlutter)
                 Container(

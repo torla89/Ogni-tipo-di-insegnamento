@@ -141,6 +141,7 @@ class _StudiScreenState extends State<StudiScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
+      case AppTema.automatico:
       case AppTema.classico:
         kAppBarColore = _kAppBarClassico;
         kTestoColore = Colors.white;

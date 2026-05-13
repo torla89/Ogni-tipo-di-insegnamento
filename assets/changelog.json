@@ -1,9 +1,10 @@
 [
   {
-    "versione": "26.05.05",
+    "versione": "26.05.06",
     "data": "Maggio 2026",
     "novita": [
       "Aggiunto due nuovi temi grafici per personalizzare l’aspetto dell’app. ",
+      "Aggiunta la modalità tema moderno automatico che cambia il tema in base alla luce esterna ",
       "Aggiunto modalità lettura con caratteri più grandi"
     ]
   },

@@ -259,8 +259,8 @@ class _PodcastScreenState extends State<PodcastScreen> {
   }
 
   Future<void> _scaricaPodcast(String filename) async {
-    if (kIsWeb) return;
-    if (_isIOS || _isMacOS || _isWindows) {
+    // Web, iOS, macOS, Windows → apri nel browser
+    if (kIsWeb || _isIOS || _isMacOS || _isWindows) {
       await launchUrl(Uri.parse(Uri.encodeFull(_baseUrl + filename)),
           mode: LaunchMode.externalApplication);
       return;
@@ -370,6 +370,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
     final Color kBottoneBordo;
 
     switch (tema) {
+      case AppTema.automatico:
       case AppTema.classico:
         kBottoneColore = _kBottoneClassico;
         kBottoneBordo = _kBottoneClassico;

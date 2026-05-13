@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/categorie.dart';
 import '../theme_provider.dart';
 import 'pdf_viewer_screen.dart';
+import 'webview_audio_player_windows.dart';
 
 String _titoloVisualizzato(String titolo) {
   const Map<String, String> override = {
@@ -79,30 +80,31 @@ class _CercaScreenState extends State<CercaScreen> {
   DateTime.fromMillisecondsSinceEpoch(0);
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
-  bool get _useExternalPlayer => kIsWeb || _isWindows;
-  bool get _isIOS => !kIsWeb && Platform.isIOS;
   bool get _isMacOS => !kIsWeb && Platform.isMacOS;
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
 
   @override
   void initState() {
     super.initState();
-    if (!_useExternalPlayer) {
+    if (!_isWindows) {
       _configuraAudioSession();
-      _playerControlChannel.setMethodCallHandler((call) async {
-        if (!mounted) return;
-        switch (call.method) {
-          case 'play': await _player.play(); break;
-          case 'pause': await _player.pause(); break;
-          case 'togglePlayPause':
-            if (_isPlaying) await _player.pause();
-            else await _player.play();
-            break;
-          case 'seekTo':
-            final posMs = call.arguments as int?;
-            if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
-            break;
-        }
-      });
+      if (!kIsWeb) {
+        _playerControlChannel.setMethodCallHandler((call) async {
+          if (!mounted) return;
+          switch (call.method) {
+            case 'play': await _player.play(); break;
+            case 'pause': await _player.pause(); break;
+            case 'togglePlayPause':
+              if (_isPlaying) await _player.pause();
+              else await _player.play();
+              break;
+            case 'seekTo':
+              final posMs = call.arguments as int?;
+              if (posMs != null) await _player.seek(Duration(milliseconds: posMs));
+              break;
+          }
+        });
+      }
 
       _player.playerStateStream.listen((state) {
         if (mounted) {
@@ -113,8 +115,8 @@ class _CercaScreenState extends State<CercaScreen> {
                 state.processingState == ProcessingState.buffering;
           });
           if (state.playing != wasPlaying && _audioAttivo != null) {
-            _aggiornaService(_displayName(_audioAttivo!), state.playing);
-            _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
+            if (!kIsWeb) _aggiornaService(_displayName(_audioAttivo!), state.playing);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
           }
         }
       });
@@ -127,7 +129,7 @@ class _CercaScreenState extends State<CercaScreen> {
               _audioAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
             if (!kIsWeb && Platform.isAndroid) _aggiornaPosizioneService(pos, _durata);
-            _aggiornaNowPlaying(_displayName(_audioAttivo!), _isPlaying);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), _isPlaying);
           }
         }
       });
@@ -141,7 +143,7 @@ class _CercaScreenState extends State<CercaScreen> {
           setState(() { _isPlaying = false; _posizione = Duration.zero; });
           _player.seek(Duration.zero);
           _player.stop();
-          _fermaService();
+          if (!kIsWeb) _fermaService();
           if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
         }
       });
@@ -149,6 +151,7 @@ class _CercaScreenState extends State<CercaScreen> {
   }
 
   Future<void> _configuraAudioSession() async {
+    if (kIsWeb) return;
     final session = await AudioSession.instance;
     await session.configure(const AudioSessionConfiguration(
       avAudioSessionCategory: AVAudioSessionCategory.playback,
@@ -165,11 +168,13 @@ class _CercaScreenState extends State<CercaScreen> {
   }
 
   Future<void> _avviaService(String titolo) async {
+    if (kIsWeb) return;
     try { await _audioServiceChannel.invokeMethod('startService', {'title': titolo, 'isPlaying': true}); }
     catch (e) { debugPrint('Errore avvio service: $e'); }
   }
 
   Future<void> _aggiornaService(String titolo, bool isPlaying) async {
+    if (kIsWeb) return;
     final now = DateTime.now();
     if (now.difference(_ultimoAggiornaService).inMilliseconds < 200) return;
     _ultimoAggiornaService = now;
@@ -196,26 +201,27 @@ class _CercaScreenState extends State<CercaScreen> {
   }
 
   Future<void> _fermaService() async {
+    if (kIsWeb) return;
     try { await _audioServiceChannel.invokeMethod('stopService'); }
     catch (e) { debugPrint('Errore stop service: $e'); }
   }
 
   Future<void> _scarica(String nomePdf) async {
-    if (_isDownloading) return;
     final filename = _nomeAudio(nomePdf);
-    final titolo = _displayName(nomePdf);
     final url = Uri.encodeFull(_baseUrl + filename);
-    if (_isIOS || _isMacOS) {
+    // Web, iOS, macOS, Windows → apri nel browser
+    if (kIsWeb || _isIOS || _isMacOS || _isWindows) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
     }
+    if (_isDownloading) return;
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
-        'url': url, 'filename': filename, 'title': titolo,
+        'url': url, 'filename': filename, 'title': _displayName(nomePdf),
       });
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download avviato: $titolo'),
+          SnackBar(content: Text('Download avviato: ${_displayName(nomePdf)}'),
               duration: const Duration(seconds: 2)));
     } catch (e) { debugPrint('Errore download: $e'); }
     finally { if (mounted) setState(() => _isDownloading = false); }
@@ -223,8 +229,8 @@ class _CercaScreenState extends State<CercaScreen> {
 
   @override
   void dispose() {
-    if (!_useExternalPlayer) {
-      _fermaService();
+    if (!_isWindows) {
+      if (!kIsWeb) _fermaService();
       if (_isIOS || _isMacOS) _nowPlayingChannel.invokeMethod('clear');
       _player.dispose();
     }
@@ -236,6 +242,10 @@ class _CercaScreenState extends State<CercaScreen> {
   String _nomeAudio(String nomePdf) => nomePdf.replaceAll('.pdf', '.mp3');
 
   Future<void> _riproduci(String nomePdf) async {
+    if (_isWindows) {
+      setState(() => _audioAttivo = nomePdf);
+      return;
+    }
     final filename = _nomeAudio(nomePdf);
     final titolo = _displayName(nomePdf);
     try {
@@ -251,9 +261,14 @@ class _CercaScreenState extends State<CercaScreen> {
         _durata = Duration.zero;
       });
       final url = Uri.encodeFull(_baseUrl + filename);
-      if (!(_isIOS || _isMacOS)) await _avviaService(titolo);
+      if (!kIsWeb && !(_isIOS || _isMacOS)) await _avviaService(titolo);
       await _player.setUrl(url);
-      await _player.play();
+      // Avvia senza await su web per aggirare la restrizione autoplay del browser
+      if (kIsWeb) {
+        _player.play();
+      } else {
+        await _player.play();
+      }
       if (_isIOS || _isMacOS) await _aggiornaNowPlaying(titolo, true);
     } catch (e) {
       debugPrint('ERRORE RIPRODUZIONE: $e');
@@ -312,6 +327,7 @@ class _CercaScreenState extends State<CercaScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
+      case AppTema.automatico:
       case AppTema.classico:
         kBottoneColore = _kBottoneClassico;
         kBottoneBordo = _kBottoneClassico;
@@ -359,6 +375,9 @@ class _CercaScreenState extends State<CercaScreen> {
         break;
     }
 
+    final bool mostraPlayerWindows = _isWindows && _audioAttivo != null;
+    final bool mostraPlayerFlutter = !_isWindows && _audioAttivo != null;
+
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -390,7 +409,6 @@ class _CercaScreenState extends State<CercaScreen> {
           ),
           child: Column(
             children: [
-              // Campo cerca
               Center(
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxWidth),
@@ -421,7 +439,6 @@ class _CercaScreenState extends State<CercaScreen> {
                   ),
                 ),
               ),
-              // Risultati
               Expanded(
                 child: _risultati.isEmpty
                     ? Center(
@@ -456,10 +473,8 @@ class _CercaScreenState extends State<CercaScreen> {
                         final isUltimo = index == _risultati.length - 1;
 
                         if (isModerno) {
-                          // Stile lista con divisore
                           return Container(
-                            color: isAttivo && !_useExternalPlayer
-                                ? kAttivoColore : kSfondoRiga,
+                            color: isAttivo ? kAttivoColore : kSfondoRiga,
                             child: Column(
                               children: [
                                 IntrinsicHeight(
@@ -467,7 +482,6 @@ class _CercaScreenState extends State<CercaScreen> {
                                     crossAxisAlignment:
                                     CrossAxisAlignment.stretch,
                                     children: [
-                                      // Icona PDF
                                       InkWell(
                                         onTap: () => Navigator.push(
                                             context,
@@ -482,7 +496,6 @@ class _CercaScreenState extends State<CercaScreen> {
                                               size: 20, color: kTestoSecColore),
                                         ),
                                       ),
-                                      // Titolo + categoria
                                       Expanded(
                                         child: InkWell(
                                           onTap: () => Navigator.push(
@@ -505,7 +518,7 @@ class _CercaScreenState extends State<CercaScreen> {
                                                   softWrap: true,
                                                   style: TextStyle(
                                                     fontSize: fontSize,
-                                                    fontWeight: isAttivo && !_useExternalPlayer
+                                                    fontWeight: isAttivo
                                                         ? FontWeight.bold : FontWeight.normal,
                                                     color: kTestoColore,
                                                   ),
@@ -519,23 +532,21 @@ class _CercaScreenState extends State<CercaScreen> {
                                           ),
                                         ),
                                       ),
-                                      // Icona audio
                                       InkWell(
                                         onTap: () => _riproduci(r.voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 12, vertical: 14),
-                                          child: isAttivo && _isLoading && !_useExternalPlayer
+                                          child: isAttivo && _isLoading && !_isWindows
                                               ? SizedBox(width: 20, height: 20,
                                               child: CircularProgressIndicator(
                                                   color: kTestoColore, strokeWidth: 2))
                                               : Icon(
-                                              isAttivo && _isPlaying && !_useExternalPlayer
+                                              isAttivo && _isPlaying && !_isWindows
                                                   ? Icons.pause_circle_outline_rounded
                                                   : Icons.play_circle_outline_rounded,
                                               size: 24,
-                                              color: isAttivo && !_useExternalPlayer
-                                                  ? kTestoColore : kTestoSecColore),
+                                              color: isAttivo ? kTestoColore : kTestoSecColore),
                                         ),
                                       ),
                                     ],
@@ -548,14 +559,12 @@ class _CercaScreenState extends State<CercaScreen> {
                             ),
                           );
                         } else {
-                          // Stile classico con bottoni
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Material(
-                                color: isAttivo && !_useExternalPlayer
-                                    ? kAttivoColore : kBottoneColore,
+                                color: isAttivo ? kAttivoColore : kBottoneColore,
                                 child: IntrinsicHeight(
                                   child: Row(
                                     crossAxisAlignment:
@@ -590,7 +599,7 @@ class _CercaScreenState extends State<CercaScreen> {
                                                         softWrap: true,
                                                         style: TextStyle(
                                                           fontSize: fontSize,
-                                                          fontWeight: isAttivo && !_useExternalPlayer
+                                                          fontWeight: isAttivo
                                                               ? FontWeight.bold : FontWeight.w500,
                                                           color: kTestoColore,
                                                         ),
@@ -613,17 +622,16 @@ class _CercaScreenState extends State<CercaScreen> {
                                         child: SizedBox(
                                           width: 48,
                                           child: Center(
-                                            child: isAttivo && _isLoading && !_useExternalPlayer
+                                            child: isAttivo && _isLoading && !_isWindows
                                                 ? SizedBox(width: 18, height: 18,
                                                 child: CircularProgressIndicator(
                                                     color: kTestoColore, strokeWidth: 2))
                                                 : Icon(
-                                                isAttivo && _isPlaying && !_useExternalPlayer
+                                                isAttivo && _isPlaying && !_isWindows
                                                     ? Icons.pause_circle_outline_rounded
                                                     : Icons.record_voice_over_rounded,
                                                 size: 20,
-                                                color: isAttivo && !_useExternalPlayer
-                                                    ? kTestoColore : kTestoSecColore),
+                                                color: isAttivo ? kTestoColore : kTestoSecColore),
                                           ),
                                         ),
                                       ),
@@ -639,8 +647,43 @@ class _CercaScreenState extends State<CercaScreen> {
                   ),
                 ),
               ),
-              // Mini player
-              if (_audioAttivo != null && !_useExternalPlayer)
+              // Player Windows (webview) con bottone download sopra
+              if (mostraPlayerWindows) ...[
+                Container(
+                  color: kPlayerColore,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _scarica(_audioAttivo!),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.download_rounded,
+                                  color: kTestoSecColore, size: 18),
+                              const SizedBox(width: 4),
+                              Text('Scarica',
+                                  style: TextStyle(
+                                      color: kTestoSecColore, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                WebviewAudioPlayerWindows(
+                  audioUrl: Uri.encodeFull(_baseUrl + _nomeAudio(_audioAttivo!)),
+                  titolo: _displayName(_audioAttivo!),
+                  playerColore: kPlayerColore,
+                  testoColore: kTestoColore,
+                  testoSecColore: kTestoSecColore,
+                ),
+              ],
+              // Player Flutter (Android, iOS, macOS, Web)
+              if (mostraPlayerFlutter)
                 Container(
                   decoration: BoxDecoration(
                     color: kPlayerColore,
