@@ -59,51 +59,101 @@ class _StudiScreenState extends State<StudiScreen> {
   int get _totaleStudi =>
       _tutteLeCategorie.fold(0, (sum, c) => sum + c.voci.length);
 
-  // Bottone classico mobile (flex height, 2 colonne)
   Widget _buildBottoneClassicoMobile(
       BuildContext context, {
         required Categoria cat,
         required double fontSize,
+        required AppThemeProvider provider,
       }) {
+    final pColore  = provider.isPersonalizzato ? provider.coloreBottoneAttivo : _kBottoneClassico;
+    final pOpacita = provider.isPersonalizzato ? provider.opacitaBottoneAttiva : 0.92;
+    final pRadius  = provider.isPersonalizzato ? provider.radiusBottone : 10.0;
+    final pOutline = provider.isPersonalizzato && provider.isStileOutline;
+    final pLista   = provider.isPersonalizzato && provider.isStileLista;
+    final testoC   = provider.isPersonalizzato
+        ? (pOutline ? pColore : provider.coloreTestoBottone)
+        : Colors.white;
+
+    if (pLista) {
+      return InkWell(
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: cat))),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          child: Text(
+            _titoloVisualizzato(cat.titolo),
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500, color: testoC),
+          ),
+        ),
+      );
+    }
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: _kBottoneClassico,
-        foregroundColor: Colors.white,
-        elevation: 2,
+        backgroundColor: pOutline ? Colors.transparent : pColore.withOpacity(pOpacita),
+        foregroundColor: testoC,
+        overlayColor: testoC.withOpacity(0.15),
+        elevation: pOutline ? 0 : 2,
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        side: pOutline ? BorderSide(color: pColore, width: 1.5) : null,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pRadius)),
       ),
       onPressed: () => Navigator.push(context,
           MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: cat))),
       child: Text(
         _titoloVisualizzato(cat.titolo).toUpperCase(),
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: fontSize,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.2,
-        ),
+        style: TextStyle(color: testoC, fontSize: fontSize,
+            fontWeight: FontWeight.w500, letterSpacing: 0.2),
       ),
     );
   }
 
-  // Bottone classico desktop (altezza fissa 54, stile vecchio)
   Widget _buildBottoneClassicoDesktop(
       BuildContext context, {
         required Categoria cat,
         required double fontSize,
+        required AppThemeProvider provider,
       }) {
+    final pColore  = provider.isPersonalizzato ? provider.coloreBottoneAttivo : _kBottoneClassico;
+    final pOpacita = provider.isPersonalizzato ? provider.opacitaBottoneAttiva : 0.92;
+    final pRadius  = provider.isPersonalizzato ? provider.radiusBottone : 10.0;
+    final pOutline = provider.isPersonalizzato && provider.isStileOutline;
+    final pLista   = provider.isPersonalizzato && provider.isStileLista;
+    final testoC   = provider.isPersonalizzato
+        ? (pOutline ? pColore : provider.coloreTestoBottone)
+        : Colors.white;
+
+    if (pLista) {
+      return InkWell(
+        onTap: () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: cat))),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          child: Text(
+            _titoloVisualizzato(cat.titolo),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500, color: testoC),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _kBottoneClassico,
-          foregroundColor: Colors.white,
-          elevation: 4,
+          backgroundColor: pOutline ? Colors.transparent : pColore.withOpacity(pOpacita),
+          foregroundColor: testoC,
+          overlayColor: testoC.withOpacity(0.15),
+          elevation: pOutline ? 0 : 4,
           shadowColor: Colors.black54,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          side: pOutline ? BorderSide(color: pColore, width: 1.5) : null,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(pRadius)),
         ),
         onPressed: () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: cat))),
@@ -112,12 +162,8 @@ class _StudiScreenState extends State<StudiScreen> {
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          ),
+          style: TextStyle(color: testoC, fontSize: fontSize,
+              fontWeight: FontWeight.w700, letterSpacing: 0.5),
         ),
       ),
     );
@@ -126,7 +172,7 @@ class _StudiScreenState extends State<StudiScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppThemeProvider>();
-    final tema = provider.tema;
+    final tema = provider.temaImpostato;
     final isModerno = tema != AppTema.classico;
     final isDesktop = MediaQuery.of(context).size.width > 1000;
     final sfondo = isDesktop ? provider.sfondoDesktop : provider.sfondoMobile;
@@ -141,39 +187,45 @@ class _StudiScreenState extends State<StudiScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
-      case AppTema.automatico:
-      case AppTema.classico:
-        kAppBarColore = _kAppBarClassico;
-        kTestoColore = Colors.white;
-        kTestoSecColore = Colors.white70;
-        kIconaColore = Colors.white70;
-        kCercaColore = _kCercaClassico;
-        kDivisoreColore = Colors.white24;
-        kSfondoRiga = Colors.transparent;
-        break;
       case AppTema.modernoScuro:
-        kAppBarColore = _kAppBarScuro;
-        kTestoColore = Colors.white;
+        kAppBarColore   = _kAppBarScuro;
+        kTestoColore    = Colors.white;
         kTestoSecColore = Colors.white60;
-        kIconaColore = Colors.white60;
-        kCercaColore = Colors.white.withOpacity(0.1);
+        kIconaColore    = Colors.white54;
+        kCercaColore    = Colors.white.withOpacity(0.12);
         kDivisoreColore = Colors.white24;
-        kSfondoRiga = Colors.black.withOpacity(0.25);
+        kSfondoRiga     = Colors.black.withOpacity(0.25);
         break;
       case AppTema.modernoChiaro:
-        kAppBarColore = _kAppBarChiaro;
-        kTestoColore = const Color(0xFF1A0A00);
+        kAppBarColore   = _kAppBarChiaro;
+        kTestoColore    = const Color(0xFF1A0A00);
         kTestoSecColore = const Color(0xFF5C3D1E);
-        kIconaColore = const Color(0xFF5C3D1E);
-        kCercaColore = Colors.white.withOpacity(0.45);
+        kIconaColore    = const Color(0xFF5C3D1E);
+        kCercaColore    = Colors.black.withOpacity(0.06);
         kDivisoreColore = const Color(0x445C3D1E);
-        kSfondoRiga = Colors.white.withOpacity(0.45);
+        kSfondoRiga     = Colors.white.withOpacity(0.45);
+        break;
+      default:
+        kAppBarColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kAppBarClassico;
+        kTestoColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone : Colors.white;
+        kTestoSecColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone.withOpacity(0.7) : Colors.white70;
+        kIconaColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone.withOpacity(0.7) : Colors.white70;
+        kCercaColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kCercaClassico;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga     = Colors.transparent;
         break;
     }
 
     final meta = (_tutteLeCategorie.length / 2).ceil();
     final colonnaSinistra = _tutteLeCategorie.sublist(0, meta);
-    final colonnaDestra = _tutteLeCategorie.sublist(meta);
+    final colonnaDestra   = _tutteLeCategorie.sublist(meta);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -209,23 +261,17 @@ class _StudiScreenState extends State<StudiScreen> {
               constraints: const BoxConstraints(maxWidth: 1200),
               child: isModerno
                   ? _buildModerno(context,
-                provider: provider,
-                tema: tema,
-                isDesktop: isDesktop,
-                fontSize: fontSize,
-                kTestoColore: kTestoColore,
-                kTestoSecColore: kTestoSecColore,
-                kIconaColore: kIconaColore,
-                kCercaColore: kCercaColore,
-                kDivisoreColore: kDivisoreColore,
-                kSfondoRiga: kSfondoRiga,
+                provider: provider, tema: tema,
+                isDesktop: isDesktop, fontSize: fontSize,
+                kTestoColore: kTestoColore, kTestoSecColore: kTestoSecColore,
+                kIconaColore: kIconaColore, kCercaColore: kCercaColore,
+                kDivisoreColore: kDivisoreColore, kSfondoRiga: kSfondoRiga,
               )
                   : _buildClassico(context,
-                isDesktop: isDesktop,
-                fontSize: fontSize,
-                colonnaSinistra: colonnaSinistra,
-                colonnaDestra: colonnaDestra,
-                kCercaColore: kCercaColore,
+                isDesktop: isDesktop, fontSize: fontSize,
+                colonnaSinistra: colonnaSinistra, colonnaDestra: colonnaDestra,
+                kTestoColore: kTestoColore, kTestoSecColore: kTestoSecColore,
+                kIconaColore: kIconaColore, kCercaColore: kCercaColore,
                 provider: provider,
               ),
             ),
@@ -242,11 +288,22 @@ class _StudiScreenState extends State<StudiScreen> {
         required double fontSize,
         required List<Categoria> colonnaSinistra,
         required List<Categoria> colonnaDestra,
+        required Color kTestoColore,
+        required Color kTestoSecColore,
+        required Color kIconaColore,
         required Color kCercaColore,
         required AppThemeProvider provider,
       }) {
+    final cercaTesto = provider.isPersonalizzato
+        ? provider.coloreTestoBottone : Colors.white;
+    final cercaRadius = provider.isPersonalizzato
+        ? provider.radiusBottone : 12.0;
+    final cercaOutline = provider.isPersonalizzato && provider.isStileOutline;
+    final cercaBg = cercaOutline
+        ? Colors.transparent
+        : kCercaColore;
+
     if (isDesktop) {
-      // Desktop classico: 4 colonne, bottoni stile vecchio altezza 54
       return CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -254,39 +311,42 @@ class _StudiScreenState extends State<StudiScreen> {
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
               child: Column(
                 children: [
-                  const Icon(Icons.menu_book_rounded,
-                      color: Colors.white70, size: 36),
+                  Icon(Icons.menu_book_rounded, color: kIconaColore, size: 36),
                   const SizedBox(height: 8),
-                  const Text('Studi biblici di Ellero Balzani',
+                  Text('Studi biblici di Ellero Balzani',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           fontSize: 22, fontWeight: FontWeight.bold,
-                          fontStyle: FontStyle.italic, color: Colors.white,
-                          shadows: [Shadow(blurRadius: 6, color: Colors.black54)])),
+                          fontStyle: FontStyle.italic, color: kTestoColore,
+                          shadows: const [Shadow(blurRadius: 6, color: Colors.black54)])),
                   const SizedBox(height: 4),
                   Text('${_tutteLeCategorie.length} categorie · $_totaleStudi studi',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13, color: Colors.white70)),
+                      style: TextStyle(fontSize: 13, color: kTestoSecColore)),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton.icon(
-                      icon: const Icon(Icons.manage_search_rounded,
-                          color: Colors.white, size: 18),
+                      icon: Icon(Icons.manage_search_rounded, color: cercaTesto, size: 18),
                       label: Text('Cerca per parole chiave',
                           style: TextStyle(
-                              color: Colors.white,
+                              color: cercaTesto,
                               fontSize: provider.fontSizeBottone,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: kCercaColore,
-                        foregroundColor: Colors.white,
-                        elevation: 6,
+                        backgroundColor: cercaBg,
+                        foregroundColor: cercaTesto,
+                        overlayColor: cercaTesto.withOpacity(0.15),
+                        elevation: cercaOutline ? 0 : 6,
                         shadowColor: Colors.black54,
+                        side: cercaOutline
+                            ? BorderSide(color: provider.coloreBottoneAttivo, width: 1.5)
+                            : null,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                            borderRadius: BorderRadius.circular(
+                                provider.isPersonalizzato ? cercaRadius : 14)),
                       ),
                       onPressed: () => Navigator.push(context,
                           MaterialPageRoute(builder: (_) => CercaScreen())),
@@ -308,7 +368,7 @@ class _StudiScreenState extends State<StudiScreen> {
               ),
               delegate: SliverChildBuilderDelegate(
                     (context, index) => _buildBottoneClassicoDesktop(context,
-                    cat: _tutteLeCategorie[index], fontSize: fontSize),
+                    cat: _tutteLeCategorie[index], fontSize: fontSize, provider: provider),
                 childCount: _tutteLeCategorie.length,
               ),
             ),
@@ -323,33 +383,37 @@ class _StudiScreenState extends State<StudiScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       children: [
         const SizedBox(height: 8),
-        const Icon(Icons.menu_book_rounded, color: Colors.white70, size: 36),
+        Icon(Icons.menu_book_rounded, color: kIconaColore, size: 36),
         const SizedBox(height: 8),
-        const Text('Studi biblici di Ellero Balzani',
+        Text('Studi biblici di Ellero Balzani',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold,
-                fontStyle: FontStyle.italic, color: Colors.white,
-                shadows: [Shadow(blurRadius: 6, color: Colors.black54)])),
+            style: TextStyle(
+                fontSize: 22, fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic, color: kTestoColore,
+                shadows: const [Shadow(blurRadius: 6, color: Colors.black54)])),
         const SizedBox(height: 4),
         Text('${_tutteLeCategorie.length} categorie · $_totaleStudi studi',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: Colors.white70)),
+            style: TextStyle(fontSize: 13, color: kTestoSecColore)),
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            icon: const Icon(Icons.manage_search_rounded,
-                color: Colors.white, size: 18),
+            icon: Icon(Icons.manage_search_rounded, color: cercaTesto, size: 18),
             label: Text('Cerca per parole chiave',
-                style: TextStyle(color: Colors.white,
-                    fontSize: provider.fontSizeBottone)),
+                style: TextStyle(color: cercaTesto, fontSize: provider.fontSizeBottone)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: kCercaColore,
-              foregroundColor: Colors.white,
-              elevation: 2,
+              backgroundColor: cercaBg,
+              foregroundColor: cercaTesto,
+              overlayColor: cercaTesto.withOpacity(0.15),
+              elevation: cercaOutline ? 0 : 2,
               padding: const EdgeInsets.symmetric(vertical: 14),
+              side: cercaOutline
+                  ? BorderSide(color: provider.coloreBottoneAttivo, width: 1.5)
+                  : null,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(
+                      provider.isPersonalizzato ? cercaRadius : 12)),
             ),
             onPressed: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => CercaScreen())),
@@ -360,7 +424,7 @@ class _StudiScreenState extends State<StudiScreen> {
           final catSx = colonnaSinistra[i];
           Widget destro = i < colonnaDestra.length
               ? _buildBottoneClassicoMobile(context,
-              cat: colonnaDestra[i], fontSize: fontSize)
+              cat: colonnaDestra[i], fontSize: fontSize, provider: provider)
               : const SizedBox.shrink();
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
@@ -369,7 +433,7 @@ class _StudiScreenState extends State<StudiScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(child: _buildBottoneClassicoMobile(context,
-                      cat: catSx, fontSize: fontSize)),
+                      cat: catSx, fontSize: fontSize, provider: provider)),
                   const SizedBox(width: 4),
                   Expanded(child: destro),
                 ],
@@ -382,7 +446,7 @@ class _StudiScreenState extends State<StudiScreen> {
     );
   }
 
-  // ── Layout MODERNI (lista singola colonna su mobile E desktop) ───
+  // ── Layout MODERNI ───────────────────────────────────────────────
   Widget _buildModerno(
       BuildContext context, {
         required AppThemeProvider provider,
@@ -418,19 +482,16 @@ class _StudiScreenState extends State<StudiScreen> {
                 Text('${_tutteLeCategorie.length} categorie · $_totaleStudi studi',
                     style: TextStyle(fontSize: 13, color: kTestoSecColore)),
                 const SizedBox(height: 12),
-                // Bottone cerca stile lista
                 InkWell(
                   onTap: () => Navigator.push(context,
                       MaterialPageRoute(builder: (_) => CercaScreen())),
                   child: Container(
                     color: kSfondoRiga,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 4, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.manage_search_rounded,
-                            size: 22, color: kTestoSecColore),
+                        Icon(Icons.manage_search_rounded, size: 22, color: kTestoSecColore),
                         const SizedBox(width: 16),
                         Flexible(
                           child: Text('Cerca per parole chiave',
@@ -451,7 +512,6 @@ class _StudiScreenState extends State<StudiScreen> {
             ),
           ),
         ),
-        // Lista singola colonna su mobile E desktop
         SliverPadding(
           padding: EdgeInsets.fromLTRB(
               isDesktop ? 24 : 16, 0, isDesktop ? 24 : 16, 24),
@@ -466,11 +526,9 @@ class _StudiScreenState extends State<StudiScreen> {
                     children: [
                       InkWell(
                         onTap: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) =>
-                                CategoriaScreen(categoria: cat))),
+                            MaterialPageRoute(builder: (_) => CategoriaScreen(categoria: cat))),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 14),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
                           child: Row(
                             children: [
                               Container(
@@ -492,9 +550,7 @@ class _StudiScreenState extends State<StudiScreen> {
                                           fontWeight: FontWeight.w500,
                                         )),
                                     Text('${cat.voci.length} studi',
-                                        style: TextStyle(
-                                            color: kTestoSecColore,
-                                            fontSize: 11)),
+                                        style: TextStyle(color: kTestoSecColore, fontSize: 11)),
                                   ],
                                 ),
                               ),

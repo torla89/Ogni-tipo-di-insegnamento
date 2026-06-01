@@ -304,7 +304,7 @@ class _CercaScreenState extends State<CercaScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppThemeProvider>();
-    final tema = provider.tema;
+    final tema = provider.temaImpostato;
     final isModerno = tema != AppTema.classico;
     final isDesktop = MediaQuery.of(context).size.width > 1000;
     final fontSize = provider.fontSizeBottone;
@@ -327,22 +327,6 @@ class _CercaScreenState extends State<CercaScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
-      case AppTema.automatico:
-      case AppTema.classico:
-        kBottoneColore = _kBottoneClassico;
-        kBottoneBordo = _kBottoneClassico;
-        kAttivoColore = _kAttivoClassico;
-        kPlayerColore = _kPlayerClassico;
-        kAppBarColore = _kAppBarClassico;
-        kTestoColore = Colors.white;
-        kTestoSecColore = Colors.white70;
-        kSearchFill = Colors.black.withOpacity(0.45);
-        kSearchBordo = Colors.transparent;
-        kSliderAttivo = Colors.white;
-        kSliderInattivo = Colors.white30;
-        kDivisoreColore = Colors.white24;
-        kSfondoRiga = Colors.transparent;
-        break;
       case AppTema.modernoScuro:
         kBottoneColore = Colors.transparent;
         kBottoneBordo = Colors.transparent;
@@ -351,12 +335,12 @@ class _CercaScreenState extends State<CercaScreen> {
         kAppBarColore = _kAppBarScuro;
         kTestoColore = Colors.white;
         kTestoSecColore = Colors.white60;
-        kSearchFill = Colors.black.withOpacity(0.3);
-        kSearchBordo = Colors.white24;
         kSliderAttivo = Colors.white;
         kSliderInattivo = Colors.white30;
         kDivisoreColore = Colors.white24;
         kSfondoRiga = Colors.black.withOpacity(0.25);
+        kSearchFill = Colors.white.withOpacity(0.08);
+        kSearchBordo = Colors.white24;
         break;
       case AppTema.modernoChiaro:
         kBottoneColore = Colors.transparent;
@@ -366,12 +350,39 @@ class _CercaScreenState extends State<CercaScreen> {
         kAppBarColore = _kAppBarChiaro;
         kTestoColore = const Color(0xFF1A0A00);
         kTestoSecColore = const Color(0xFF5C3D1E);
-        kSearchFill = Colors.white.withOpacity(0.5);
-        kSearchBordo = const Color(0x445C3D1E);
         kSliderAttivo = const Color(0xFF7B4F2E);
         kSliderInattivo = const Color(0xFFD4A574);
         kDivisoreColore = const Color(0x445C3D1E);
         kSfondoRiga = Colors.white.withOpacity(0.45);
+        kSearchFill = Colors.black.withOpacity(0.05);
+        kSearchBordo = const Color(0x445C3D1E);
+        break;
+      default:
+        kBottoneColore = _kBottoneClassico;
+        kBottoneBordo = _kBottoneClassico;
+        kAttivoColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(0.5)
+            : _kAttivoClassico;
+        kPlayerColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kPlayerClassico;
+        kAppBarColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kAppBarClassico;
+        kTestoColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone : Colors.white;
+        kTestoSecColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone.withOpacity(0.7) : Colors.white70;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.transparent;
+        kSearchFill = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(0.15)
+            : Colors.white.withOpacity(0.08);
+        kSearchBordo = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(0.6)
+            : Colors.white24;
         break;
     }
 
@@ -533,7 +544,9 @@ class _CercaScreenState extends State<CercaScreen> {
                                         ),
                                       ),
                                       InkWell(
-                                        onTap: () => _riproduci(r.voce.nomePdf),
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(r.voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 12, vertical: 14),
@@ -559,12 +572,75 @@ class _CercaScreenState extends State<CercaScreen> {
                             ),
                           );
                         } else {
+                          final pColore  = provider.isPersonalizzato
+                              ? provider.coloreBottoneAttivo : _kBottoneClassico;
+                          final pOpacita = provider.isPersonalizzato
+                              ? provider.opacitaBottoneAttiva : 0.92;
+                          final pRadius  = provider.isPersonalizzato
+                              ? provider.radiusBottone : 12.0;
+                          final pOutline = provider.isPersonalizzato && provider.isStileOutline;
+                          final pLista   = provider.isPersonalizzato && provider.isStileLista;
+                          final testoC = pOutline ? pColore : provider.coloreTestoBottone;
+
+                          if (pLista) {
+                            return Column(children: [
+                              InkWell(
+                                onTap: () => Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) => PdfViewerScreen(
+                                        nomePdf: r.voce.nomePdf, titolo: r.voce.titolo))),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 14),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.picture_as_pdf_rounded,
+                                          size: 20, color: kTestoSecColore),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          Text(_titoloVisualizzato(r.voce.titolo),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(color: kTestoColore,
+                                                  fontSize: fontSize)),
+                                          Text(r.categoria,
+                                              style: TextStyle(fontSize: 12,
+                                                  color: kTestoSecColore)),
+                                        ],
+                                      )),
+                                      InkWell(
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(r.voce.nomePdf),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.record_voice_over_rounded,
+                                              size: 20, color: kTestoSecColore),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (!isUltimo)
+                                Divider(height: 1, thickness: 1, color: kDivisoreColore),
+                            ]);
+                          }
+
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Material(
-                                color: isAttivo ? kAttivoColore : kBottoneColore,
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Container(
+                                decoration: pOutline ? BoxDecoration(
+                                  borderRadius: BorderRadius.circular(pRadius),
+                                  border: Border.all(color: pColore, width: 1.5),
+                                ) : null,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(pRadius),
+                                  child: Material(
+                                    color: isAttivo ? kAttivoColore
+                                        : pOutline ? Colors.transparent
+                                        : pColore.withOpacity(pOpacita),
                                 child: IntrinsicHeight(
                                   child: Row(
                                     crossAxisAlignment:
@@ -601,7 +677,7 @@ class _CercaScreenState extends State<CercaScreen> {
                                                           fontSize: fontSize,
                                                           fontWeight: isAttivo
                                                               ? FontWeight.bold : FontWeight.w500,
-                                                          color: kTestoColore,
+                                                          color: testoC,
                                                         ),
                                                       ),
                                                       Text(r.categoria.toUpperCase(),
@@ -616,9 +692,12 @@ class _CercaScreenState extends State<CercaScreen> {
                                           ),
                                         ),
                                       ),
-                                      Container(width: 1, color: kBottoneBordo),
+                                      Container(width: 1,
+                                          color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
                                       InkWell(
-                                        onTap: () => _riproduci(r.voce.nomePdf),
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(r.voce.nomePdf),
                                         child: SizedBox(
                                           width: 48,
                                           child: Center(
@@ -638,8 +717,9 @@ class _CercaScreenState extends State<CercaScreen> {
                                     ],
                                   ),
                                 ),
+                                  ),
+                                ),
                               ),
-                            ),
                           );
                         }
                       },

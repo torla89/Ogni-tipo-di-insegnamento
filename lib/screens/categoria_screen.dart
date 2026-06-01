@@ -283,7 +283,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppThemeProvider>();
-    final tema = provider.tema;
+    final tema = provider.temaImpostato;
     final isModerno = tema != AppTema.classico;
     final isDesktop = MediaQuery.of(context).size.width > 1000;
     final sfondo = isDesktop ? provider.sfondoDesktop : provider.sfondoMobile;
@@ -302,20 +302,6 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
     final Color kSfondoRiga;
 
     switch (tema) {
-      case AppTema.automatico:
-      case AppTema.classico:
-        kBottoneColore = _kBottoneClassico;
-        kBottoneBordo = _kBottoneClassico;
-        kAttivoColore = _kAttivoClassico;
-        kPlayerColore = _kPlayerClassico;
-        kAppBarColore = _kAppBarClassico;
-        kTestoColore = Colors.white;
-        kTestoSecColore = Colors.white70;
-        kSliderAttivo = Colors.white;
-        kSliderInattivo = Colors.white30;
-        kDivisoreColore = Colors.white24;
-        kSfondoRiga = Colors.transparent;
-        break;
       case AppTema.modernoScuro:
         kBottoneColore = Colors.transparent;
         kBottoneBordo = Colors.transparent;
@@ -341,6 +327,29 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
         kSliderInattivo = const Color(0xFFD4A574);
         kDivisoreColore = const Color(0x445C3D1E);
         kSfondoRiga = Colors.white.withOpacity(0.45);
+        break;
+      default:
+        kBottoneColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo : _kBottoneClassico;
+        kBottoneBordo = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo : _kBottoneClassico;
+        kAttivoColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(0.5)
+            : _kAttivoClassico;
+        kPlayerColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kPlayerClassico;
+        kAppBarColore = provider.isPersonalizzato
+            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
+            : _kAppBarClassico;
+        kTestoColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone : Colors.white;
+        kTestoSecColore = provider.isPersonalizzato
+            ? provider.coloreTestoBottone.withOpacity(0.7) : Colors.white70;
+        kSliderAttivo = Colors.white;
+        kSliderInattivo = Colors.white30;
+        kDivisoreColore = Colors.white24;
+        kSfondoRiga = Colors.transparent;
         break;
     }
 
@@ -407,6 +416,16 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                         final voce = widget.categoria.voci[index - 1];
                         final isAttivo = _audioAttivo == voce.nomePdf;
                         final isUltimo = index == widget.categoria.voci.length;
+                        final pColore  = provider.isPersonalizzato
+                            ? provider.coloreBottoneAttivo : _kBottoneClassico;
+                        final pOpacita = provider.isPersonalizzato
+                            ? provider.opacitaBottoneAttiva : 0.92;
+                        final pRadius  = provider.isPersonalizzato
+                            ? provider.radiusBottone : 12.0;
+                        final pOutline = provider.isPersonalizzato
+                            && provider.isStileOutline;
+                        final pLista   = provider.isPersonalizzato
+                            && provider.isStileLista;
 
                         if (isModerno) {
                           return Container(
@@ -468,7 +487,9 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                                         ),
                                       ),
                                       InkWell(
-                                        onTap: () => _riproduci(voce.nomePdf),
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 14),
@@ -493,12 +514,73 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                             ),
                           );
                         } else {
+                          final pColore  = provider.isPersonalizzato
+                              ? provider.coloreBottoneAttivo : _kBottoneClassico;
+                          final pOpacita = provider.isPersonalizzato
+                              ? provider.opacitaBottoneAttiva : 0.92;
+                          final pRadius  = provider.isPersonalizzato
+                              ? provider.radiusBottone : 12.0;
+                          final pOutline = provider.isPersonalizzato
+                              && provider.isStileOutline;
+                          final pLista   = provider.isPersonalizzato
+                              && provider.isStileLista;
+                          final testoC = pOutline ? pColore : provider.coloreTestoBottone;
+
+                          if (pLista) {
+                            return Column(children: [
+                              InkWell(
+                                onTap: () => Navigator.push(context,
+                                    MaterialPageRoute(builder: (_) =>
+                                        PdfViewerScreen(
+                                            nomePdf: voce.nomePdf,
+                                            titolo: voce.titolo))),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 14),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.picture_as_pdf_rounded,
+                                          size: 20, color: kTestoSecColore),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: Text(
+                                        _titoloVisualizzato(voce.titolo),
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(color: kTestoColore,
+                                            fontSize: fontSize),
+                                      )),
+                                      InkWell(
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(voce.nomePdf),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(left: 8),
+                                          child: Icon(Icons.record_voice_over_rounded,
+                                              size: 20, color: kTestoSecColore),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (!isUltimo)
+                                Divider(height: 1, thickness: 1, color: kDivisoreColore),
+                            ]);
+                          }
+
                           return Padding(
-                            padding: EdgeInsets.only(top: index == 1 ? 12 : 4),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Material(
-                                color: isAttivo ? kAttivoColore : kBottoneColore,
+                              padding: EdgeInsets.only(top: index == 1 ? 12 : 4),
+                              child: Container(
+                                decoration: pOutline ? BoxDecoration(
+                                  borderRadius: BorderRadius.circular(pRadius),
+                                  border: Border.all(color: pColore, width: 1.5),
+                                ) : null,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(pRadius),
+                                  child: Material(
+                                    color: isAttivo ? kAttivoColore
+                                        : pOutline ? Colors.transparent
+                                        : pColore.withOpacity(pOpacita),
                                 child: IntrinsicHeight(
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -537,9 +619,12 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                                           ),
                                         ),
                                       ),
-                                      Container(width: 1, color: kBottoneBordo),
+                                      Container(width: 1,
+                                          color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
                                       InkWell(
-                                        onTap: () => _riproduci(voce.nomePdf),
+                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
+                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
+                                                  onTap: () => _riproduci(voce.nomePdf),
                                         child: SizedBox(
                                           width: 48,
                                           child: Center(
@@ -559,8 +644,9 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                                     ],
                                   ),
                                 ),
+                                  ),
+                                ),
                               ),
-                            ),
                           );
                         }
                       },

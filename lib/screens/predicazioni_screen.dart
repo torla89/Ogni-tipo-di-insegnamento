@@ -9,128 +9,188 @@ import 'package:url_launcher/url_launcher.dart';
 import '../theme_provider.dart';
 import 'webview_audio_player_windows.dart';
 
-const _kBottoneClassico = Color(0xFF7B1FA2);
-const _kAttivoClassico = Color(0xFF4A0072);
-const _kPlayerClassico = Color(0xFF4A0072);
-const _kAppBarClassico = Color(0xFF1829E8);
-const _kPlayerScuro = Color(0xDD0A0A1A);
-const _kAppBarScuro = Color(0xCC0A0A1A);
-const _kPlayerChiaro = Color(0xDDFFFFFF);
-const _kAppBarChiaro = Color(0xCCFFFFFF);
+const _kBottoneClassicoP = Color(0xFF1565C0);
+const _kAttivoClassicoP = Color(0xFF0D47A1);
+const _kPlayerClassicoP = Color(0xFF0D47A1);
+const _kAppBarClassicoP = Color(0xFF1829E8);
+const _kPlayerScuroP = Color(0xDD0A0A1A);
+const _kAppBarScuroP = Color(0xCC0A0A1A);
+const _kPlayerChiaroP = Color(0xDDFFFFFF);
+const _kAppBarChiaroP = Color(0xCCFFFFFF);
 
-class _GruppoPodcast {
+// ── Icona cassetta SVG custom ────────────────────────────────────
+class _IconaCassetta extends StatelessWidget {
+  final Color colore;
+  final double size;
+  const _IconaCassetta({required this.colore, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size * 0.68),
+      painter: _CassettaPainter(colore),
+    );
+  }
+}
+
+class _CassettaPainter extends CustomPainter {
+  final Color colore;
+  _CassettaPainter(this.colore);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final paint = Paint()
+      ..color = colore
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.06
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Corpo cassetta
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, w, h),
+      Radius.circular(w * 0.08),
+    );
+    canvas.drawRRect(rrect, paint);
+
+    // Finestra superiore
+    final finestra = RRect.fromRectAndRadius(
+      Rect.fromLTWH(w * 0.12, h * 0.08, w * 0.76, h * 0.35),
+      Radius.circular(w * 0.04),
+    );
+    canvas.drawRRect(finestra, paint);
+
+    // Rocchetto sinistro
+    canvas.drawCircle(Offset(w * 0.3, h * 0.72), w * 0.14, paint);
+    final paintFill = Paint()..color = colore..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(w * 0.3, h * 0.72), w * 0.05, paintFill);
+
+    // Rocchetto destro
+    canvas.drawCircle(Offset(w * 0.7, h * 0.72), w * 0.14, paint);
+    canvas.drawCircle(Offset(w * 0.7, h * 0.72), w * 0.05, paintFill);
+
+    // Nastro tra rocchetti
+    final path = Path()
+      ..moveTo(w * 0.3 + w * 0.14, h * 0.72)
+      ..lineTo(w * 0.7 - w * 0.14, h * 0.72);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_CassettaPainter old) => old.colore != colore;
+}
+
+// ── Struttura gruppi ─────────────────────────────────────────────
+class _GruppoPredicazione {
   final String titolo;
   final List<String> parti;
   final bool isSerie;
-  _GruppoPodcast({required this.titolo, required this.parti, required this.isSerie});
+  final bool isCassetta; // true se ha Lato A/B
+  _GruppoPredicazione({
+    required this.titolo,
+    required this.parti,
+    required this.isSerie,
+    required this.isCassetta,
+  });
 }
 
-class PodcastScreen extends StatefulWidget {
-  const PodcastScreen({super.key});
+class PredicazioniScreen extends StatefulWidget {
+  const PredicazioniScreen({super.key});
 
   @override
-  State<PodcastScreen> createState() => _PodcastScreenState();
+  State<PredicazioniScreen> createState() => _PredicazioniScreenState();
 }
 
-class _PodcastScreenState extends State<PodcastScreen> {
+class _PredicazioniScreenState extends State<PredicazioniScreen> {
   static const String _baseUrl =
-      'https://archive.org/download/podcast_revisionati/';
+      'https://archive.org/download/giudicare-14/';
 
-  static const List<String> _podcast = [
-    'Chi non è con Cristo.mp3',
-    'Come salvare il proprio matrimonio.mp3',
-    'Credente o Cristiano - Parte 1 di 4.mp3',
-    'Credente o Cristiano - Parte 2 di 4.mp3',
-    'Credente o Cristiano - Parte 3 di 4.mp3',
-    'Credente o Cristiano - Parte 4 di 4.mp3',
-    'Cristiano o religioso.mp3',
-    'Dio è Spirito.mp3',
-    'Gesù è Geova.mp3',
-    'Gesù il figlio di Dio - Parte 1 di 2.mp3',
-    'Gesù il figlio di Dio - Parte 2 di 2.mp3',
-    'I nomi di Dio - Parte 1 di 3.mp3',
-    'I nomi di Dio - Parte 2 di 3.mp3',
-    'I nomi di Dio - Parte 3 di 3.mp3',
-    'Il Dio tremendo.mp3',
-    'Il nostro cervello - Parte 1 di 6.mp3',
-    'Il Dio uno e trino.mp3',
-    'Il termine Dio.mp3',
-    'Il termine immagine.mp3',
-    'Il termine nome.mp3',
-    'Il termine Padre.mp3',
-    'Io Sono.mp3',
-    'JHWH 01 - I nomi della divinita - Parte 1 di 4.mp3',
-    'JHWH 01 - I nomi della divinita - Parte 2 di 4.mp3',
-    'JHWH 01 - I nomi della divinita - Parte 3 di 4.mp3',
-    'JHWH 01 - I nomi della divinita - Parte 4 di 4.mp3',
-    'JHWH 02 - Elohim - Parte 1 di 3.mp3',
-    'JHWH 02 - Elohim - Parte 2 di 3.mp3',
-    'JHWH 02 - Elohim - Parte 3 di 3.mp3',
-    "JHWH 03 - La polideità e pluralità di Dio - Parte 1 di 3.mp3",
-    "JHWH 03 - La polideità e pluralità di Dio - Parte 2 di 3.mp3",
-    "JHWH 03 - La polideità e pluralità di Dio - Parte 3 di 3.mp3",
-    'JHWH 04 - Lo Spirito di Dio.mp3',
-    "JHWH 05 - L'antropomorfismo di Dio - Parte 1 di 3.mp3",
-    "JHWH 05 - L'antropomorfismo di Dio - Parte 2 di 3.mp3",
-    "JHWH 05 - L'antropomorfismo di Dio - Parte 3 di 3.mp3",
-    "JHWH 06 - L'angelo dell'Eterno - Parte 1 di 3.mp3",
-    "JHWH 06 - L'angelo dell'Eterno - Parte 2 di 3.mp3",
-    "JHWH 06 - L'angelo dell'Eterno - Parte 3 di 3.mp3",
-    "JHWH 07 - L'Io sono - Parte 1 di 2.mp3",
-    "JHWH 07 - L'Io sono - Parte 2 di 2.mp3",
-    'JHWH 08 - La presenza di Cristo nel AT - Parte 1 di 3.mp3',
-    'JHWH 08 - La presenza di Cristo nel AT - Parte 2 di 3.mp3',
-    'JHWH 08 - La presenza di Cristo nel AT - Parte 3 di 3.mp3',
-    "JHWH 09 - Cristo nell'Antico Testamento - Parte 1 di 2.mp3",
-    "JHWH 09 - Cristo nell'Antico Testamento - Parte 2 di 2.mp3",
-    "JHWH 10 - Gesù è il Signore - Parte 1 di 4.mp3",
-    "JHWH 10 - Gesù è il Signore - Parte 2 di 4.mp3",
-    "JHWH 10 - Gesù è il Signore - Parte 3 di 4.mp3",
-    "JHWH 10 - Gesù è il Signore - Parte 4 di 4.mp3",
-    'JHWH 11 - Un Dio trino - Parte 1 di 4.mp3',
-    'JHWH 11 - Un Dio trino - Parte 2 di 4.mp3',
-    'JHWH 11 - Un Dio trino - Parte 3 di 4.mp3',
-    'JHWH 11 - Un Dio trino - Parte 4 di 4.mp3',
-    "JHWH 12 - Gesù rivela il Padre - Parte 1 di 4.mp3",
-    "JHWH 12 - Gesù rivela il Padre - Parte 2 di 4.mp3",
-    "JHWH 12 - Gesù rivela il Padre - Parte 3 di 4.mp3",
-    "JHWH 12 - Gesù rivela il Padre - Parte 4 di 4.mp3",
-    "La divinità di Gesù - Parte 1 di 3.mp3",
-    "La divinità di Gesù - Parte 2 di 3.mp3",
-    "La divinità di Gesù - Parte 3 di 3.mp3",
-    "La pluralità di Dio - Parte 1 di 2.mp3",
-    "La pluralità di Dio _ Parte 2 di 2.mp3",
-    "La polideità dell'Elohim.mp3",
-    'La vita comunitaria dei primi cristiani.mp3',
-    "Lo spirito dell'Elohim.mp3",
-    "L'unicità del Cristianesimo.mp3",
-    "Perché i figli di Dio sono divisi.mp3",
-    'Prefazione al Libro.mp3',
-    'Principi da ricordare per un matrimonio duraturo.mp3',
-    'Sei guidato dallo Spirito Santo o da uno spirito maligno - Parte 1 di 2.mp3',
-    'Sei guidato dallo Spirito Santo o da uno spirito maligno - Parte 2 di 2.mp3',
-    'Unico Dio - Parte 1 di 2.mp3',
-    'Unico Dio - Parte 2 di 2.mp3',
-    'Uno stesso Dio.mp3',
-    'Vi è un solo Dio.mp3',
+  static const List<String> _predicazioni = [
+    'Alcuni errori della chiesa cattolico romana - La morte di gesù.mp3',
+    'Cosa ti impedisce di credere.mp3',
+    'Come essere felici 1 - Lato A.mp3',
+    'Come essere felici 2 - Lato A.mp3',
+    'Come essere felici 2 - Lato B.mp3',
+    'Come essere felici 3 - Lato A.mp3',
+    'Come essere felici 4 - Lato A.mp3',
+    'Come essere felici 5 - Lato A.mp3',
+    'Come essere felici 6 - Lato A.mp3',
+    'Come essere felici 7 - Lato A.mp3',
+    'Come evangelizzare 1 - lato A.mp3',
+    'Come evangelizzare 1 - lato B.mp3',
+    'Come evangelizzare 2 - lato A.mp3',
+    'Come evangelizzare 3 - lato A.mp3',
+    "Cos'è la fede - lato A.mp3",
+    "Cos'è la fede - lato B.mp3",
+    'Giudicare_1.mp3',
+    'Giudicare_2.mp3',
+    'Giudicare_3.mp3',
+    'Giudicare_4.mp3',
+    'Giudicare_5.mp3',
+    'Giudicare_6.mp3',
+    'Giudicare_7.mp3',
+    'Giudicare_8.mp3',
+    'Giudicare_9.mp3',
+    'Giudicare_10.mp3',
+    'Giudicare_11.mp3',
+    'Giudicare_12.mp3',
+    'Giudicare_13.mp3',
+    'Giudicare_14.mp3',
+    'Giudicare_15.mp3',
+    'Giudicare_16.mp3',
+    'Giudicare_17.mp3',
+    'Giudicare_18.mp3',
+    'Giudicare_19.mp3',
+    'Gli elementi della fede che salva - lato A.mp3',
+    'Gli elementi della fede che salva - lato B.mp3',
+    "Il Patto  - 1.  L'insegnamento nel nuovo patto.mp3",
+    'Il Patto - 2. Il sangue del patto.mp3',
+    'Il Patto - 4. Il peccato e la coscienza.mp3',
+    'Il Patto - 5. Il sacerdote e la presenza di Dio.mp3',
+    'Il Patto - 6. La sottomissione e la coscienza.mp3',
+    'Il Patto - 8. Chi appartiene a Dio.mp3',
+    'Il Sangue di Cristo.mp3',
+    'La coscienza 1 - Lato A.mp3',
+    'La coscienza 1 - Lato B.mp3',
+    'La coscienza 2 - Lato A.mp3',
+    'La coscienza 2 - Lato B.mp3',
+    'La fede ebraica Risposta a un interrogativo.mp3',
+    'La donna nel matrimonio - intuizione e saggezza.mp3',
+    'La legge civile, morale, religiosa - lato A.mp3',
+    'La legge civile, morale, religiosa - lato B.mp3',
+    'La Mia Fede1-YHWH.mp3',
+    'La necessità della fede - lato A.mp3',
+    'La necessità della fede - lato B.mp3',
+    'La prova di una vera fede - lato A.mp3',
+    'La prova di una vera fede - lato B.mp3',
+    'La sofferenza e la prosperità dei malvagi.mp3',
+    'Le offerte e il dare.mp3',
+    "Qual'è la religione giusta - Lato A.mp3",
+    "Qual'è la religione giusta - Lato B.mp3",
+    "Qual'è la religione giusta 2 - Lato A.mp3",
+    'Rimettere i peccati.mp3',
+    'Studio parola - rema logos - lato A.mp3',
+    'Studio parola - rema logos - lato B.mp3',
+    'Studio sulla Fede.mp3',
+    'Unità della Chiesa.mp3',
   ];
-
   static const Map<String, String> _nomiPersonalizzati = {
-    "La pluralità di Dio _ Parte 2 di 2.mp3":
-    "La pluralità di Dio - Parte 2 di 2",
+    'Cosa ti impedisce di credere.mp3': 'Cosa ti impedisce di credere?',
   };
 
   static const _audioServiceChannel =
   MethodChannel('com.ognitipodiinsegnamento/audio_service');
   static const _playerControlChannel =
-  MethodChannel('com.ognitipodiinsegnamento/player_control');
+  MethodChannel('com.ognitipodiinsegnamento/player_control_predicazioni');
   static const _nowPlayingChannel =
   MethodChannel('com.ognitipodiinsegnamento/nowplaying');
 
   final TextEditingController _controller = TextEditingController();
   final AudioPlayer _player = AudioPlayer();
-  List<String> _risultati = List.from(_podcast);
-  String? _podcastAttivo;
+  List<String> _risultati = List.from(_predicazioni);
+  String? _audioAttivo;
   bool _isPlaying = false;
   bool _isLoading = false;
   bool _isDownloading = false;
@@ -146,43 +206,85 @@ class _PodcastScreenState extends State<PodcastScreen> {
   bool get _isMacOS => !kIsWeb && Platform.isMacOS;
   bool get _isIOS => !kIsWeb && Platform.isIOS;
 
-  String _titoloBase(String filename) {
-    final nome = _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
-    return nome.replaceAll(RegExp(r'\s[-_]\s*[Pp]arte\s+\d+\s+di\s+\d+'), '').trim();
-  }
+  // ── Helpers ──────────────────────────────────────────────────
 
-  bool _isSerie(String filename) {
-    final nome = filename.replaceAll('.mp3', '');
-    return RegExp(r'[Pp]arte\s+\d+\s+di\s+\d+').hasMatch(nome);
-  }
+  bool _haLato(String filename) =>
+      RegExp(r'[Ll]ato\s+[AaBb]').hasMatch(filename);
 
-  String _etichettaParte(String filename) {
-    final nome = _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
-    final match = RegExp(r'[Pp]arte\s+(\d+)\s+di\s+(\d+)').firstMatch(nome);
-    if (match != null) return 'Parte ${match.group(1)} di ${match.group(2)}';
+  bool _hasNumero(String filename) =>
+      RegExp(r'_\d+').hasMatch(filename.replaceAll('.mp3', ''));
+
+  // Chiave di raggruppamento
+  String _chiaveGruppo(String filename) {
+    String nome = filename.replaceAll('.mp3', '').toLowerCase().trim();
+    // Rimuove " - lato a/b"
+    nome = nome.replaceAll(RegExp(r'\s*[-–]\s*lato\s+[ab]', caseSensitive: false), '').trim();
+    // Rimuove "_N" finale (Giudicare_1 → giudicare)
+    nome = nome.replaceAll(RegExp(r'_\d+$'), '').trim();
+    // Rimuove " N" finale numerico (Come evangelizzare 1 → come evangelizzare)
+    nome = nome.replaceAll(RegExp(r'\s+\d+$'), '').trim();
+    // Rimuove " - N. titolo" (Il Patto - 2. Il sangue → il patto)
+    nome = nome.replaceAll(RegExp(r'\s*[-–]\s*\d+\.\s*.+$'), '').trim();
     return nome;
   }
 
-  List<_GruppoPodcast> _buildGruppi(List<String> lista) {
+  String _titoloGruppo(String filename) {
+    String nome = filename.replaceAll('.mp3', '').trim();
+    nome = nome.replaceAll(RegExp(r'\s*[-–]\s*[Ll]ato\s+[AaBb]', caseSensitive: false), '').trim();
+    nome = nome.replaceAll(RegExp(r'_\d+$'), '').trim();
+    nome = nome.replaceAll(RegExp(r'\s+\d+$'), '').trim();
+    // Rimuove " - N. titolo" (Il Patto - 2. Il sangue → Il Patto)
+    nome = nome.replaceAll(RegExp(r'\s*[-–]\s*\d+\.\s*.+$'), '').trim();
+    return nome;
+  }
+
+  // Etichetta della singola parte nell'accordion
+  String _etichettaParte(String filename) {
+    final nome = filename.replaceAll('.mp3', '');
+    // "Come evangelizzare 1 - lato A" → "Cassetta 1 - Lato A"
+    final numLato = RegExp(r'(\d+)\s*[-–]\s*[Ll]ato\s+([AaBb])').firstMatch(nome);
+    if (numLato != null) return 'Cassetta ${numLato.group(1)} - Lato ${numLato.group(2)!.toUpperCase()}';
+    // Solo lato senza numero → "Cassetta - Lato A"
+    final soloLato = RegExp(r'[Ll]ato\s+([AaBb])').firstMatch(nome);
+    if (soloLato != null) return 'Cassetta - Lato ${soloLato.group(1)!.toUpperCase()}';
+    // Giudicare_N → "Parte N"
+    final numUnder = RegExp(r'_(\d+)$').firstMatch(nome);
+    if (numUnder != null) return 'Parte ${numUnder.group(1)}';
+    // "Il Patto  - 1.  L'insegnamento..." → "1. L'insegnamento..."
+    final numTitolo = RegExp(r'[-–]\s*(\d+)\.\s*(.+)$').firstMatch(nome);
+    if (numTitolo != null) return '${numTitolo.group(1)}. ${numTitolo.group(2)!.trim()}';
+    return nome;
+  }
+
+  List<_GruppoPredicazione> _buildGruppi(List<String> lista) {
     final Map<String, List<String>> map = {};
     final List<String> ordine = [];
+
     for (final f in lista) {
-      final base = _titoloBase(f);
-      if (!map.containsKey(base)) {
-        map[base] = [];
-        ordine.add(base);
+      final chiave = _chiaveGruppo(f);
+      if (!map.containsKey(chiave)) {
+        map[chiave] = [];
+        ordine.add(chiave);
       }
-      map[base]!.add(f);
+      map[chiave]!.add(f);
     }
-    return ordine.map((base) {
-      final parti = map[base]!;
-      return _GruppoPodcast(
-        titolo: base,
+
+    return ordine.map((chiave) {
+      final parti = map[chiave]!;
+      final isSerie = parti.length > 1 || _haLato(parti.first) || _hasNumero(parti.first);
+      final isCassetta = parti.any((p) => _haLato(p));
+      final titolo = _titoloGruppo(parti.first);
+      return _GruppoPredicazione(
+        titolo: titolo,
         parti: parti,
-        isSerie: parti.length > 1 || _isSerie(parti.first),
+        isSerie: isSerie,
+        isCassetta: isCassetta,
       );
     }).toList();
   }
+
+  String _displayName(String filename) =>
+      _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
 
   @override
   void initState() {
@@ -215,9 +317,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
             _isLoading = state.processingState == ProcessingState.loading ||
                 state.processingState == ProcessingState.buffering;
           });
-          if (state.playing != wasPlaying && _podcastAttivo != null) {
-            if (!kIsWeb) _aggiornaService(_displayName(_podcastAttivo!), state.playing);
-            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_podcastAttivo!), state.playing);
+          if (state.playing != wasPlaying && _audioAttivo != null) {
+            if (!kIsWeb) _aggiornaService(_displayName(_audioAttivo!), state.playing);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), state.playing);
           }
         }
       });
@@ -227,10 +329,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
           setState(() => _posizione = pos);
           final now = DateTime.now();
           if (now.difference(_ultimoAggiornaPosizioneService).inSeconds >= 5 &&
-              _podcastAttivo != null && _isPlaying) {
+              _audioAttivo != null && _isPlaying) {
             _ultimoAggiornaPosizioneService = now;
             if (!kIsWeb && Platform.isAndroid) _aggiornaPosizioneService(pos, _durata);
-            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_podcastAttivo!), _isPlaying);
+            if (_isIOS || _isMacOS) _aggiornaNowPlaying(_displayName(_audioAttivo!), _isPlaying);
           }
         }
       });
@@ -307,25 +409,22 @@ class _PodcastScreenState extends State<PodcastScreen> {
     catch (e) { debugPrint('Errore stop service: $e'); }
   }
 
-  Future<void> _scaricaPodcast(String filename) async {
+  Future<void> _scarica(String filename) async {
+    final url = Uri.encodeFull(_baseUrl + filename);
     if (kIsWeb || _isIOS || _isMacOS || _isWindows) {
-      await launchUrl(Uri.parse(Uri.encodeFull(_baseUrl + filename)),
-          mode: LaunchMode.externalApplication);
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       return;
     }
     if (_isDownloading) return;
     setState(() => _isDownloading = true);
     try {
       await _audioServiceChannel.invokeMethod('downloadPodcast', {
-        'url': Uri.encodeFull(_baseUrl + filename),
-        'filename': filename, 'title': _displayName(filename),
+        'url': url, 'filename': filename, 'title': _displayName(filename),
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Download avviato: ${_displayName(filename)}'),
-          duration: const Duration(seconds: 2),
-        ));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Download avviato: ${_displayName(filename)}'),
+        duration: const Duration(seconds: 2),
+      ));
     } catch (e) { debugPrint('Errore download: $e'); }
     finally { if (mounted) setState(() => _isDownloading = false); }
   }
@@ -345,32 +444,28 @@ class _PodcastScreenState extends State<PodcastScreen> {
     query = query.trim().toLowerCase();
     setState(() {
       if (query.isEmpty) {
-        _risultati = List.from(_podcast);
+        _risultati = List.from(_predicazioni);
       } else {
-        _risultati = _podcast
+        _risultati = _predicazioni
             .where((p) => _displayName(p).toLowerCase().contains(query))
             .toList();
       }
     });
   }
 
-  String _displayName(String filename) {
-    return _nomiPersonalizzati[filename] ?? filename.replaceAll('.mp3', '');
-  }
-
   Future<void> _riproduci(String filename) async {
     if (_isWindows) {
-      setState(() => _podcastAttivo = filename);
+      setState(() => _audioAttivo = filename);
       return;
     }
     try {
-      if (_podcastAttivo == filename) {
+      if (_audioAttivo == filename) {
         if (_isPlaying) await _player.pause();
         else await _player.play();
         return;
       }
       setState(() {
-        _podcastAttivo = filename;
+        _audioAttivo = filename;
         _isLoading = true;
         _posizione = Duration.zero;
         _durata = Duration.zero;
@@ -378,7 +473,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
       final url = Uri.encodeFull(_baseUrl + filename);
       if (!kIsWeb && !(_isIOS || _isMacOS)) await _avviaService(_displayName(filename));
       await _player.setUrl(url);
-      await _player.play();
+      if (kIsWeb) { _player.play(); } else { await _player.play(); }
       if (_isIOS || _isMacOS) await _aggiornaNowPlaying(_displayName(filename), true);
     } catch (e, stack) {
       debugPrint('ERRORE RIPRODUZIONE: $e\nSTACK: $stack');
@@ -391,6 +486,21 @@ class _PodcastScreenState extends State<PodcastScreen> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$m:$s';
+  }
+
+  // ── Widget icona nel player ──────────────────────────────────
+  Widget _iconaPlayer(String filename, Color colore) {
+    if (_haLato(filename)) {
+      return _IconaCassetta(colore: colore, size: 22);
+    }
+    return Icon(Icons.mic_rounded, size: 18, color: colore);
+  }
+
+  Widget _iconaRiga(String filename, Color colore, {double size = 20}) {
+    if (_haLato(filename)) {
+      return _IconaCassetta(colore: colore, size: size);
+    }
+    return Icon(Icons.mic_rounded, size: size * 0.8, color: colore);
   }
 
   @override
@@ -421,23 +531,23 @@ class _PodcastScreenState extends State<PodcastScreen> {
         kBottoneColore = Colors.transparent;
         kBottoneBordo = Colors.transparent;
         kAttivoColore = Colors.white.withOpacity(0.08);
-        kPlayerColore = _kPlayerScuro;
-        kAppBarColore = _kAppBarScuro;
+        kPlayerColore = _kPlayerScuroP;
+        kAppBarColore = _kPlayerScuroP;
         kTestoColore = Colors.white;
         kTestoSecColore = Colors.white60;
         kSliderAttivo = Colors.white;
         kSliderInattivo = Colors.white30;
         kDivisoreColore = Colors.white24;
         kSfondoRiga = Colors.black.withOpacity(0.25);
-        kSearchFill = Colors.white.withOpacity(0.08);
-        kSearchBordo = Colors.white24;
+        kSearchFill = provider.coloreTestoBottone.withOpacity(0.08);
+        kSearchBordo = provider.coloreTestoBottone.withOpacity(0.3);
         break;
       case AppTema.modernoChiaro:
         kBottoneColore = Colors.transparent;
         kBottoneBordo = Colors.transparent;
         kAttivoColore = Colors.black.withOpacity(0.08);
-        kPlayerColore = _kPlayerChiaro;
-        kAppBarColore = _kAppBarChiaro;
+        kPlayerColore = _kPlayerChiaroP;
+        kAppBarColore = _kPlayerChiaroP;
         kTestoColore = const Color(0xFF1A0A00);
         kTestoSecColore = const Color(0xFF5C3D1E);
         kSliderAttivo = const Color(0xFF7B4F2E);
@@ -448,17 +558,17 @@ class _PodcastScreenState extends State<PodcastScreen> {
         kSearchBordo = const Color(0x445C3D1E);
         break;
       default:
-        kBottoneColore = _kBottoneClassico;
-        kBottoneBordo = _kBottoneClassico;
+        kBottoneColore = _kBottoneClassicoP;
+        kBottoneBordo = _kBottoneClassicoP;
         kAttivoColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(0.5)
-            : _kAttivoClassico;
+            : _kAttivoClassicoP;
         kPlayerColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kPlayerClassico;
+            : _kPlayerClassicoP;
         kAppBarColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kAppBarClassico;
+            : _kAppBarClassicoP;
         kTestoColore = provider.isPersonalizzato
             ? provider.coloreTestoBottone : Colors.white;
         kTestoSecColore = provider.isPersonalizzato
@@ -467,17 +577,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
         kSliderInattivo = Colors.white30;
         kDivisoreColore = Colors.white24;
         kSfondoRiga = Colors.transparent;
-        kSearchFill = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.15)
-            : Colors.white.withOpacity(0.08);
-        kSearchBordo = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.6)
-            : Colors.white24;
+        kSearchFill = provider.coloreTestoBottone.withOpacity(0.08);
+        kSearchBordo = provider.coloreTestoBottone.withOpacity(0.3);
         break;
     }
 
-    final bool mostraPlayerWindows = _isWindows && _podcastAttivo != null;
-    final bool mostraPlayerFlutter = !_isWindows && _podcastAttivo != null;
+    final bool mostraPlayerWindows = _isWindows && _audioAttivo != null;
+    final bool mostraPlayerFlutter = !_isWindows && _audioAttivo != null;
     final gruppi = _buildGruppi(_risultati);
 
     return Scaffold(
@@ -486,7 +592,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
         backgroundColor: kAppBarColore,
         foregroundColor: kTestoColore,
         elevation: 0,
-        title: Text('Podcast',
+        title: Text('Predicazioni',
             style: TextStyle(color: kTestoColore,
                 fontWeight: FontWeight.w600, fontStyle: FontStyle.italic)),
         leading: IconButton(
@@ -522,10 +628,10 @@ class _PodcastScreenState extends State<PodcastScreen> {
                             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
                             child: Column(
                               children: [
-                                Icon(Icons.headphones_rounded,
+                                Icon(Icons.record_voice_over_rounded,
                                     color: kTestoSecColore, size: 36),
                                 const SizedBox(height: 8),
-                                Text('Podcast di Ellero Balzani',
+                                Text('Predicazioni di Ellero Balzani',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontSize: 22, fontWeight: FontWeight.bold,
@@ -534,7 +640,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                           ? [] : const [Shadow(blurRadius: 6, color: Colors.black54)],
                                     )),
                                 const SizedBox(height: 4),
-                                Text('${_risultati.length} episodi',
+                                Text('${_risultati.length} predicazioni',
                                     style: TextStyle(fontSize: 13, color: kTestoSecColore)),
                                 const SizedBox(height: 10),
                                 TextField(
@@ -542,7 +648,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                   onChanged: _cerca,
                                   style: TextStyle(color: kTestoColore),
                                   decoration: InputDecoration(
-                                    hintText: 'Cerca podcast...',
+                                    hintText: 'Cerca predicazioni...',
                                     hintStyle: TextStyle(color: kTestoSecColore),
                                     prefixIcon: Icon(Icons.search, color: kTestoSecColore),
                                     suffixIcon: _controller.text.isNotEmpty
@@ -575,20 +681,19 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                 style: TextStyle(color: kTestoSecColore, fontSize: 16))))
                             : SliverPadding(
                           padding: EdgeInsets.fromLTRB(16, 0, 16,
-                              _podcastAttivo != null ? 8 : 24),
+                              _audioAttivo != null ? 8 : 24),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
-                                  (context, index) {
-                                final gruppo = gruppi[index];
-                                final isUltimoGruppo = index == gruppi.length - 1;
+                                  (context, gIdx) {
+                                final gruppo = gruppi[gIdx];
+                                final isUltimoGruppo = gIdx == gruppi.length - 1;
                                 final isEspanso = _gruppiEspansi.contains(gruppo.titolo);
-                                final haAttivoInGruppo = gruppo.parti
-                                    .any((p) => p == _podcastAttivo);
+                                final haAttivoInGruppo = gruppo.parti.any((p) => p == _audioAttivo);
 
                                 if (!gruppo.isSerie) {
-                                  // ── Podcast singolo ──────────────────
-                                  final podcast = gruppo.parti.first;
-                                  final isAttivo = _podcastAttivo == podcast;
+                                  // ── Singolo ──────────────────────────
+                                  final file = gruppo.parti.first;
+                                  final isAttivo = _audioAttivo == file;
 
                                   if (isModerno) {
                                     return Container(
@@ -602,7 +707,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
                                                   highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                                  onTap: () => _riproduci(file),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
                                                         horizontal: 12, vertical: 14),
@@ -610,22 +715,20 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                         ? SizedBox(width: 22, height: 22,
                                                         child: CircularProgressIndicator(
                                                             color: kTestoColore, strokeWidth: 2))
-                                                        : Icon(
-                                                        isAttivo && _isPlaying && !_isWindows
-                                                            ? Icons.pause_circle_outline_rounded
-                                                            : Icons.play_circle_outline_rounded,
-                                                        size: 24,
-                                                        color: isAttivo ? kTestoColore : kTestoSecColore),
+                                                        : _iconaRiga(file,
+                                                        isAttivo ? kTestoColore : kTestoSecColore,
+                                                        size: 22),
                                                   ),
                                                 ),
                                                 Expanded(
                                                   child: InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
                                                   highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                                  onTap: () => _riproduci(file),
                                                     child: Padding(
-                                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                                      child: Text(_displayName(podcast),
+                                                      padding: const EdgeInsets.symmetric(
+                                                          vertical: 14, horizontal: 4),
+                                                      child: Text(_displayName(file),
                                                           style: TextStyle(
                                                             color: kTestoColore,
                                                             fontSize: fontSize,
@@ -636,7 +739,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                   ),
                                                 ),
                                                 InkWell(
-                                                  onTap: () => _scaricaPodcast(podcast),
+                                                  onTap: () => _scarica(file),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
                                                         horizontal: 12, vertical: 14),
@@ -654,7 +757,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     );
                                   } else {
                                     final pColore  = provider.isPersonalizzato
-                                        ? provider.coloreBottoneAttivo : _kBottoneClassico;
+                                        ? provider.coloreBottoneAttivo : _kBottoneClassicoP;
                                     final pOpacita = provider.isPersonalizzato
                                         ? provider.opacitaBottoneAttiva : 0.92;
                                     final pRadius  = provider.isPersonalizzato
@@ -668,24 +771,23 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                         InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
                                                   highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                                  onTap: () => _riproduci(file),
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 4, vertical: 14),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
-                                                Icon(Icons.headphones_rounded,
-                                                    size: 20, color: kTestoSecColore),
+                                                _iconaRiga(file, kTestoSecColore, size: 20),
                                                 const SizedBox(width: 12),
                                                 Expanded(child: Text(
-                                                  _displayName(podcast),
+                                                  _displayName(file),
                                                   textAlign: TextAlign.center,
                                                   style: TextStyle(color: kTestoColore,
                                                       fontSize: fontSize),
                                                 )),
                                                 InkWell(
-                                                  onTap: () => _scaricaPodcast(podcast),
+                                                  onTap: () => _scarica(file),
                                                   child: Padding(
                                                     padding: const EdgeInsets.only(left: 8),
                                                     child: Icon(Icons.download_rounded,
@@ -722,27 +824,18 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                   child: InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
                                                   highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                                  onTap: () => _riproduci(file),
                                                     child: Padding(
                                                       padding: const EdgeInsets.symmetric(
                                                           horizontal: 12, vertical: 14),
                                                       child: Row(
                                                         mainAxisAlignment: MainAxisAlignment.center,
                                                         children: [
-                                                          if (isAttivo && _isLoading && !_isWindows)
-                                                            SizedBox(width: 20, height: 20,
-                                                                child: CircularProgressIndicator(
-                                                                    color: kTestoColore, strokeWidth: 2))
-                                                          else
-                                                            Icon(
-                                                                isAttivo && _isPlaying && !_isWindows
-                                                                    ? Icons.pause_circle_outline_rounded
-                                                                    : Icons.play_circle_outline_rounded,
-                                                                size: 20, color: testoC),
+                                                          _iconaRiga(file, testoC, size: 16),
                                                           const SizedBox(width: 8),
                                                           Expanded(
                                                             child: Text(
-                                                              _displayName(podcast).toUpperCase(),
+                                                              _displayName(file).toUpperCase(),
                                                               textAlign: TextAlign.center,
                                                               softWrap: true,
                                                               style: TextStyle(
@@ -762,50 +855,43 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 Container(width: 1,
                                                     color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
                                                 InkWell(
-                                                  onTap: () => _scaricaPodcast(podcast),
+                                                  onTap: () => _scarica(file),
                                                   child: SizedBox(
                                                     width: 44,
                                                     child: Center(
                                                       child: Icon(Icons.download_rounded,
-                                                          size: 18, color: kTestoSecColore),
+                                                          size: 18, color: testoC),
                                                     ),
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
-                                            ),
-                                          ),
                                         ),
+                                      ),
+                                    ),
                                     );
                                   }
                                 } else {
-                                  // ── Serie con accordion ───────────────
+                                  // ── Serie accordion ───────────────────
                                   if (isModerno) {
                                     return Container(
                                       color: kSfondoRiga,
                                       child: Column(
                                         children: [
-                                          // Header serie
                                           InkWell(
                                             onTap: () => setState(() {
-                                              if (isEspanso) {
-                                                _gruppiEspansi.remove(gruppo.titolo);
-                                              } else {
-                                                _gruppiEspansi.add(gruppo.titolo);
-                                              }
+                                              if (isEspanso) _gruppiEspansi.remove(gruppo.titolo);
+                                              else _gruppiEspansi.add(gruppo.titolo);
                                             }),
                                             child: Padding(
                                               padding: const EdgeInsets.symmetric(
                                                   horizontal: 12, vertical: 14),
                                               child: Row(
                                                 children: [
-                                                  Icon(
-                                                    Icons.queue_music_rounded,
-                                                    size: 22,
-                                                    color: haAttivoInGruppo
-                                                        ? kTestoColore : kTestoSecColore,
-                                                  ),
+                                                  _iconaRiga(gruppo.parti.first,
+                                                      haAttivoInGruppo ? kTestoColore : kTestoSecColore,
+                                                      size: 20),
                                                   const SizedBox(width: 12),
                                                   Expanded(
                                                     child: Column(
@@ -835,14 +921,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                               ),
                                             ),
                                           ),
-                                          // Parti espanse
                                           AnimatedSize(
                                             duration: const Duration(milliseconds: 200),
                                             curve: Curves.easeInOut,
                                             child: isEspanso
                                                 ? Column(
                                               children: gruppo.parti.map((parte) {
-                                                final isAttivo = _podcastAttivo == parte;
+                                                final isAttivo = _audioAttivo == parte;
                                                 return Container(
                                                   color: isAttivo ? kAttivoColore : kSfondoRiga,
                                                   child: IntrinsicHeight(
@@ -862,13 +947,20 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                             borderRadius: BorderRadius.circular(2),
                                                           ),
                                                         ),
+                                                        Padding(
+                                                          padding: const EdgeInsets.symmetric(
+                                                              horizontal: 6, vertical: 12),
+                                                          child: _iconaRiga(parte,
+                                                              isAttivo ? kTestoColore : kTestoSecColore,
+                                                              size: 16),
+                                                        ),
                                                         InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
                                                   highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
                                                   onTap: () => _riproduci(parte),
                                                           child: Padding(
                                                             padding: const EdgeInsets.symmetric(
-                                                                horizontal: 8, vertical: 12),
+                                                                horizontal: 6, vertical: 12),
                                                             child: isAttivo && _isLoading && !_isWindows
                                                                 ? SizedBox(width: 20, height: 20,
                                                                 child: CircularProgressIndicator(
@@ -894,19 +986,17 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                 _etichettaParte(parte),
                                                                 style: TextStyle(
                                                                   color: isAttivo
-                                                                      ? kTestoColore
-                                                                      : kTestoSecColore,
+                                                                      ? kTestoColore : kTestoSecColore,
                                                                   fontSize: fontSize - 1,
                                                                   fontWeight: isAttivo
-                                                                      ? FontWeight.bold
-                                                                      : FontWeight.normal,
+                                                                      ? FontWeight.bold : FontWeight.normal,
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
                                                         ),
                                                         InkWell(
-                                                          onTap: () => _scaricaPodcast(parte),
+                                                          onTap: () => _scarica(parte),
                                                           child: Padding(
                                                             padding: const EdgeInsets.symmetric(
                                                                 horizontal: 12, vertical: 12),
@@ -928,9 +1018,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                       ),
                                     );
                                   } else {
-                                    // Classico
+                                    // Classico accordion
                                     final pColore2  = provider.isPersonalizzato
-                                        ? provider.coloreBottoneAttivo : _kBottoneClassico;
+                                        ? provider.coloreBottoneAttivo : _kBottoneClassicoP;
                                     final pOpacita2 = provider.isPersonalizzato
                                         ? provider.opacitaBottoneAttiva : 0.92;
                                     final pRadius2  = provider.isPersonalizzato
@@ -954,10 +1044,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                               child: Row(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
-                                                  Icon(Icons.queue_music_rounded,
-                                                      size: 20,
-                                                      color: haAttivoInGruppo
-                                                          ? kTestoColore : kTestoSecColore),
+                                                  _iconaRiga(gruppo.parti.first,
+                                                      haAttivoInGruppo ? kTestoColore : kTestoSecColore,
+                                                      size: 20),
                                                   const SizedBox(width: 12),
                                                   Expanded(child: Text(gruppo.titolo,
                                                       textAlign: TextAlign.center,
@@ -980,7 +1069,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                             curve: Curves.easeInOut,
                                             child: isEspanso
                                                 ? Column(children: gruppo.parti.map((parte) {
-                                              final isAttivo = _podcastAttivo == parte;
+                                              final isAttivo = _audioAttivo == parte;
                                               return Column(children: [
                                                 InkWell(
                                                   splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
@@ -992,10 +1081,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                     child: Row(
                                                       mainAxisAlignment: MainAxisAlignment.center,
                                                       children: [
-                                                        Icon(Icons.headphones_rounded,
-                                                            size: 16,
-                                                            color: isAttivo
-                                                                ? kTestoColore : kTestoSecColore),
+                                                        _iconaRiga(parte,
+                                                            isAttivo ? kTestoColore : kTestoSecColore,
+                                                            size: 16),
                                                         const SizedBox(width: 8),
                                                         Text(_etichettaParte(parte),
                                                             style: TextStyle(
@@ -1018,36 +1106,28 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     }
 
                                     return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6),
-                                    child: Container(
-                                    decoration: pOutline2 ? BoxDecoration(
-                                    borderRadius: BorderRadius.circular(pRadius2),
-                                    border: Border.all(color: pColore2, width: 1.5),
-                                    ) : null,
-                                    child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(pRadius2),
-                                    child: Material(
-                                    color: haAttivoInGruppo
-                                    ? kAttivoColore
-                                        : pOutline2 ? Colors.transparent
-                                        : pColore2.withOpacity(pOpacita2),
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(pRadius2),
+                                        child: Material(
+                                          color: haAttivoInGruppo
+                                              ? kAttivoColore
+                                              : pOutline2 ? Colors.transparent
+                                              : pColore2.withOpacity(pOpacita2),
                                           child: Column(
                                             children: [
                                               InkWell(
                                                 onTap: () => setState(() {
-                                                  if (isEspanso) {
-                                                    _gruppiEspansi.remove(gruppo.titolo);
-                                                  } else {
-                                                    _gruppiEspansi.add(gruppo.titolo);
-                                                  }
+                                                  if (isEspanso) _gruppiEspansi.remove(gruppo.titolo);
+                                                  else _gruppiEspansi.add(gruppo.titolo);
                                                 }),
                                                 child: Padding(
                                                   padding: const EdgeInsets.symmetric(
                                                       horizontal: 12, vertical: 14),
                                                   child: Row(
                                                     children: [
-                                                      Icon(Icons.queue_music_rounded,
-                                                          size: 18, color: testoC2),
+                                                      _iconaRiga(gruppo.parti.first,
+                                                          kTestoColore, size: 18),
                                                       const SizedBox(width: 8),
                                                       Expanded(
                                                         child: Text(
@@ -1064,14 +1144,13 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                       Text('${gruppo.parti.length} parti',
                                                           style: TextStyle(
                                                               fontSize: 11,
-                                                              color: kTestoSecColore)),
+                                                              color: testoC2)),
                                                       const SizedBox(width: 6),
                                                       AnimatedRotation(
                                                         turns: isEspanso ? 0.5 : 0,
                                                         duration: const Duration(milliseconds: 200),
-                                                        child: Icon(
-                                                            Icons.keyboard_arrow_down_rounded,
-                                                            color: kTestoColore, size: 20),
+                                                        child: Icon(Icons.keyboard_arrow_down_rounded,
+                                                            color: testoC2, size: 20),
                                                       ),
                                                     ],
                                                   ),
@@ -1083,7 +1162,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 child: isEspanso
                                                     ? Column(
                                                   children: gruppo.parti.map((parte) {
-                                                    final isAttivo = _podcastAttivo == parte;
+                                                    final isAttivo = _audioAttivo == parte;
                                                     return IntrinsicHeight(
                                                       child: Row(
                                                         crossAxisAlignment:
@@ -1104,6 +1183,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                   mainAxisAlignment:
                                                                   MainAxisAlignment.center,
                                                                   children: [
+                                                                    _iconaRiga(parte,
+                                                                        testoC2, size: 14),
+                                                                    const SizedBox(width: 6),
                                                                     if (isAttivo && _isLoading && !_isWindows)
                                                                       SizedBox(width: 18, height: 18,
                                                                           child: CircularProgressIndicator(
@@ -1113,7 +1195,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                           isAttivo && _isPlaying && !_isWindows
                                                                               ? Icons.pause_circle_outline_rounded
                                                                               : Icons.play_circle_outline_rounded,
-                                                                          size: 18, color: kTestoColore),
+                                                                          size: 18, color: testoC2),
                                                                     const SizedBox(width: 8),
                                                                     Text(
                                                                       _etichettaParte(parte).toUpperCase(),
@@ -1121,8 +1203,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                         fontSize: fontSize - 1,
                                                                         color: testoC2,
                                                                         fontWeight: isAttivo
-                                                                            ? FontWeight.bold
-                                                                            : FontWeight.w500,
+                                                                            ? FontWeight.bold : FontWeight.w500,
                                                                       ),
                                                                     ),
                                                                   ],
@@ -1131,7 +1212,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                             ),
                                                           ),
                                                           InkWell(
-                                                            onTap: () => _scaricaPodcast(parte),
+                                                            onTap: () => _scarica(parte),
                                                             child: Container(
                                                               width: 44,
                                                               color: isAttivo
@@ -1139,7 +1220,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                                   : Colors.black.withOpacity(0.15),
                                                               child: Center(
                                                                 child: Icon(Icons.download_rounded,
-                                                                    size: 16, color: kTestoSecColore),
+                                                                    size: 16, color: testoC2),
                                                               ),
                                                             ),
                                                           ),
@@ -1152,10 +1233,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                               ),
                                             ],
                                           ),
-                                       ),
-                                       ),
-                                     ),   // chiude Container
-                                    );     // chiude Padding
+                                        ),
+                                      ),
+                                    );
                                   }
                                 }
                               },
@@ -1168,16 +1248,39 @@ class _PodcastScreenState extends State<PodcastScreen> {
                   ),
                 ),
               ),
-              // Player Windows (webview)
-              if (mostraPlayerWindows)
+              // Player Windows
+              if (mostraPlayerWindows) ...[
+                Container(
+                  color: kPlayerColore,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _scarica(_audioAttivo!),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.download_rounded, color: kTestoSecColore, size: 18),
+                              const SizedBox(width: 4),
+                              Text('Scarica', style: TextStyle(color: kTestoSecColore, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 WebviewAudioPlayerWindows(
-                  audioUrl: Uri.encodeFull(_baseUrl + _podcastAttivo!),
-                  titolo: _displayName(_podcastAttivo!),
+                  audioUrl: Uri.encodeFull(_baseUrl + _audioAttivo!),
+                  titolo: _displayName(_audioAttivo!),
                   playerColore: kPlayerColore,
                   testoColore: kTestoColore,
                   testoSecColore: kTestoSecColore,
                 ),
-              // Player Flutter (Android, iOS, macOS, Web)
+              ],
+              // Player Flutter
               if (mostraPlayerFlutter)
                 Container(
                   decoration: BoxDecoration(
@@ -1191,11 +1294,31 @@ class _PodcastScreenState extends State<PodcastScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_displayName(_podcastAttivo!),
-                          textAlign: TextAlign.center, maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: kTestoColore,
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      Row(
+                        children: [
+                          _iconaPlayer(_audioAttivo!, kTestoSecColore),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(_displayName(_audioAttivo!),
+                                textAlign: TextAlign.center,
+                                maxLines: 1, overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: kTestoColore,
+                                    fontSize: 13, fontWeight: FontWeight.w600)),
+                          ),
+                          GestureDetector(
+                            onTap: () => _scarica(_audioAttivo!),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: _isDownloading
+                                  ? SizedBox(width: 18, height: 18,
+                                  child: CircularProgressIndicator(
+                                      color: kTestoSecColore, strokeWidth: 2))
+                                  : Icon(Icons.download_rounded,
+                                  color: kTestoSecColore, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 6),
                       SliderTheme(
                         data: SliderTheme.of(context).copyWith(
