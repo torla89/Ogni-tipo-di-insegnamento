@@ -361,11 +361,9 @@ class _CercaScreenState extends State<CercaScreen> {
         kBottoneColore = _kBottoneClassico;
         kBottoneBordo = _kBottoneClassico;
         kAttivoColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.5)
-            : _kAttivoClassico;
+            ? provider.coloreBottoneAttivo : _kAttivoClassico;
         kPlayerColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kPlayerClassico;
+            ? provider.coloreBottoneAttivo : _kPlayerClassico;
         kAppBarColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
             : _kAppBarClassico;
@@ -544,9 +542,7 @@ class _CercaScreenState extends State<CercaScreen> {
                                         ),
                                       ),
                                       InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(r.voce.nomePdf),
+                                        onTap: () => _riproduci(r.voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 12, vertical: 14),
@@ -610,9 +606,7 @@ class _CercaScreenState extends State<CercaScreen> {
                                         ],
                                       )),
                                       InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(r.voce.nomePdf),
+                                        onTap: () => _riproduci(r.voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.only(left: 8),
                                           child: Icon(Icons.record_voice_over_rounded,
@@ -629,97 +623,94 @@ class _CercaScreenState extends State<CercaScreen> {
                           }
 
                           return Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Container(
-                                decoration: pOutline ? BoxDecoration(
-                                  borderRadius: BorderRadius.circular(pRadius),
-                                  border: Border.all(color: pColore, width: 1.5),
-                                ) : null,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(pRadius),
-                                  child: Material(
-                                    color: isAttivo ? kAttivoColore
-                                        : pOutline ? Colors.transparent
-                                        : pColore.withOpacity(pOpacita),
-                                child: IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (_) => PdfViewerScreen(
-                                                      nomePdf: r.voce.nomePdf,
-                                                      titolo: r.voce.titolo))),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 12),
-                                            child: Row(
-                                              children: [
-                                                Icon(Icons.picture_as_pdf_rounded,
-                                                    size: 16, color: kTestoSecColore),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                    crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        _titoloVisualizzato(r.voce.titolo)
-                                                            .toUpperCase(),
-                                                        softWrap: true,
-                                                        style: TextStyle(
-                                                          fontSize: fontSize,
-                                                          fontWeight: isAttivo
-                                                              ? FontWeight.bold : FontWeight.w500,
-                                                          color: testoC,
-                                                        ),
-                                                      ),
-                                                      Text(r.categoria.toUpperCase(),
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Container(
+                              decoration: pOutline ? BoxDecoration(
+                                borderRadius: BorderRadius.circular(pRadius),
+                                border: Border.all(color: pColore, width: 1.5),
+                              ) : null,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(pRadius),
+                                child: Material(
+                                  color: pOutline ? Colors.transparent
+                                      : pColore.withOpacity(isAttivo ? 1.0 : pOpacita),
+                                  child: IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (_) => PdfViewerScreen(
+                                                        nomePdf: r.voce.nomePdf,
+                                                        titolo: r.voce.titolo))),
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12, vertical: 12),
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.picture_as_pdf_rounded,
+                                                      size: 16, color: kTestoSecColore),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                      crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          _titoloVisualizzato(r.voce.titolo)
+                                                              .toUpperCase(),
+                                                          softWrap: true,
                                                           style: TextStyle(
-                                                              fontSize: 12,
-                                                              color: kTestoSecColore)),
-                                                    ],
+                                                            fontSize: fontSize,
+                                                            fontWeight: isAttivo
+                                                                ? FontWeight.bold : FontWeight.w500,
+                                                            color: testoC,
+                                                          ),
+                                                        ),
+                                                        Text(r.categoria.toUpperCase(),
+                                                            style: TextStyle(
+                                                                fontSize: 12,
+                                                                color: kTestoSecColore)),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      Container(width: 1,
-                                          color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
-                                      InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(r.voce.nomePdf),
-                                        child: SizedBox(
-                                          width: 48,
-                                          child: Center(
-                                            child: isAttivo && _isLoading && !_isWindows
-                                                ? SizedBox(width: 18, height: 18,
-                                                child: CircularProgressIndicator(
-                                                    color: kTestoColore, strokeWidth: 2))
-                                                : Icon(
-                                                isAttivo && _isPlaying && !_isWindows
-                                                    ? Icons.pause_circle_outline_rounded
-                                                    : Icons.record_voice_over_rounded,
-                                                size: 20,
-                                                color: isAttivo ? kTestoColore : kTestoSecColore),
+                                        Container(width: 1,
+                                            color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
+                                        InkWell(
+                                          onTap: () => _riproduci(r.voce.nomePdf),
+                                          child: SizedBox(
+                                            width: 48,
+                                            child: Center(
+                                              child: isAttivo && _isLoading && !_isWindows
+                                                  ? SizedBox(width: 18, height: 18,
+                                                  child: CircularProgressIndicator(
+                                                      color: kTestoColore, strokeWidth: 2))
+                                                  : Icon(
+                                                  isAttivo && _isPlaying && !_isWindows
+                                                      ? Icons.pause_circle_outline_rounded
+                                                      : Icons.record_voice_over_rounded,
+                                                  size: 20,
+                                                  color: isAttivo ? kTestoColore : kTestoSecColore),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
+                            ),
                           );
                         }
                       },

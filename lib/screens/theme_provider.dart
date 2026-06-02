@@ -137,8 +137,6 @@ class AppThemeProvider extends ChangeNotifier {
   static const String _keyUltimaDataRandom     = 'ultima_data_random';
   static const String _keyTemiSalvati          = 'temi_salvati';
   static const String _keyColoreTesto          = 'colore_testo_bottone';
-  static const String _keyColoreTestoGiorno    = 'colore_testo_giorno';
-  static const String _keyColoreTestoNotte     = 'colore_testo_notte';
   static const int    _maxTemi                 = 5;
 
   AppTema        _tema        = AppTema.classico;
@@ -154,9 +152,7 @@ class AppThemeProvider extends ChangeNotifier {
   Color            _coloreBottoneNotte   = const Color(0xFF1829E8);
   double           _opacitaBottoneGiorno = 0.92;
   double           _opacitaBottoneNotte  = 0.92;
-  Color?           _coloreTesto;       // null = automatico (calcolato dalla luminanza)
-  Color?           _coloreTestoGiorno; // null = usa _coloreTesto
-  Color?           _coloreTestoNotte;  // null = usa _coloreTesto
+  Color?           _coloreTesto; // null = automatico (calcolato dalla luminanza)
   AlternanzaSfondo _alternanza           = AlternanzaSfondo.fisso;
   String _sfondoFissoId      = 'chiaro_primavera';
   String _sfondoGiornoId     = 'chiaro_primavera';
@@ -279,41 +275,20 @@ class AppThemeProvider extends ChangeNotifier {
   bool get isTestoAutomatico => _coloreTesto == null;
 
   Color get coloreTestoBottone {
-    // Giorno/notte ha precedenza se impostato
-    if (_usaColoriGiornoNotte) {
-      final testoGN = _isGiornoOra ? _coloreTestoGiorno : _coloreTestoNotte;
-      if (testoGN != null) return testoGN;
-    }
     if (_coloreTesto != null) return _coloreTesto!;
     final c = coloreBottoneAttivo;
     final lum = (0.299 * c.red + 0.587 * c.green + 0.114 * c.blue) / 255;
     return lum > 0.5 ? Colors.black : Colors.white;
   }
 
-  Color? get coloreTestoGiorno => _coloreTestoGiorno;
-  Color? get coloreTestoNotte  => _coloreTestoNotte;
-
   Future<void> setColoreTesto(Color? c) async {
     _coloreTesto = c;
     final prefs = await SharedPreferences.getInstance();
-    if (c == null) { await prefs.remove(_keyColoreTesto); }
-    else { await prefs.setInt(_keyColoreTesto, c.value); }
-    notifyListeners();
-  }
-
-  Future<void> setColoreTestoGiorno(Color? c) async {
-    _coloreTestoGiorno = c;
-    final prefs = await SharedPreferences.getInstance();
-    if (c == null) { await prefs.remove(_keyColoreTestoGiorno); }
-    else { await prefs.setInt(_keyColoreTestoGiorno, c.value); }
-    notifyListeners();
-  }
-
-  Future<void> setColoreTestoNotte(Color? c) async {
-    _coloreTestoNotte = c;
-    final prefs = await SharedPreferences.getInstance();
-    if (c == null) { await prefs.remove(_keyColoreTestoNotte); }
-    else { await prefs.setInt(_keyColoreTestoNotte, c.value); }
+    if (c == null) {
+      await prefs.remove(_keyColoreTesto);
+    } else {
+      await prefs.setInt(_keyColoreTesto, c.value);
+    }
     notifyListeners();
   }
 
@@ -342,12 +317,8 @@ class AppThemeProvider extends ChangeNotifier {
     _coloreBottoneNotte   = Color(prefs.getInt(_keyColoreBottoneNotte)  ?? 0xFF1829E8);
     _opacitaBottoneGiorno = prefs.getDouble(_keyOpacitaBottoneGiorno)   ?? 0.92;
     _opacitaBottoneNotte  = prefs.getDouble(_keyOpacitaBottoneNotte)    ?? 0.92;
-    final coloreTestoVal       = prefs.getInt(_keyColoreTesto);
-    _coloreTesto       = coloreTestoVal != null ? Color(coloreTestoVal) : null;
-    final coloreTestoGiornoVal = prefs.getInt(_keyColoreTestoGiorno);
-    _coloreTestoGiorno = coloreTestoGiornoVal != null ? Color(coloreTestoGiornoVal) : null;
-    final coloreTestoNotteVal  = prefs.getInt(_keyColoreTestoNotte);
-    _coloreTestoNotte  = coloreTestoNotteVal  != null ? Color(coloreTestoNotteVal)  : null;
+    final coloreTestoVal  = prefs.getInt(_keyColoreTesto);
+    _coloreTesto = coloreTestoVal != null ? Color(coloreTestoVal) : null;
 
     final alternanzaVal = prefs.getInt(_keyAlternanza) ?? 0;
     _alternanza = AlternanzaSfondo.values[alternanzaVal
@@ -427,18 +398,20 @@ class AppThemeProvider extends ChangeNotifier {
   }
 
   // ── Sfondo random ─────────────────────────────────────────────
-  // stagione: se passato, filtra i file che contengono quel nome nel path
+  // stagione: se passato, filtra per id (es. 'primavera', 'autunno', 'inverno', 'estate'/'estivo')
   String _sfondoRandom({bool? soloChiari, bool? soloScuri, String? stagione}) {
     List<SfondoApp> lista;
     if (stagione != null) {
+      // Sinonimi: estate→ cerca anche 'estivo' (scuro_estivo)
+      final termini = stagione == 'estate' ? ['estate', 'estivo'] : [stagione];
       if (soloChiari == true) {
         lista = sfondiDisponibili
-            .where((s) => s.isChiaro && s.pathMobile.toLowerCase().contains(stagione))
+            .where((s) => s.isChiaro && termini.any((t) => s.id.contains(t)))
             .toList();
         if (lista.isEmpty) lista = sfondiChiari;
       } else {
         lista = sfondiDisponibili
-            .where((s) => !s.isChiaro && s.pathMobile.toLowerCase().contains(stagione))
+            .where((s) => !s.isChiaro && termini.any((t) => s.id.contains(t)))
             .toList();
         if (lista.isEmpty) lista = sfondiScuri;
       }
@@ -719,6 +692,31 @@ class AppThemeProvider extends ChangeNotifier {
     _temiSalvati[idx].nome = nuovoNome;
     await _salvaTemiSuPrefs();
     notifyListeners();
+  }
+
+  Future<bool> sovrascriviTema(String id, String nuovoNome) async {
+    final idx = _temiSalvati.indexWhere((t) => t.id == id);
+    if (idx == -1) return false;
+    final aggiornato = TemaPersonalizzatoSalvato(
+      id: id, nome: nuovoNome,
+      alternanza: _alternanza,
+      sfondoFissoId: _sfondoFissoId,
+      sfondoGiornoId: _sfondoGiornoId,
+      sfondoNotteId: _sfondoNotteId,
+      stileBottone: _stileBottone,
+      coloreBottone: _coloreBottone.value,
+      opacitaBottone: _opacitaBottone,
+      coloreBottoneGiorno: _coloreBottoneGiorno.value,
+      opacitaBottoneGiorno: _opacitaBottoneGiorno,
+      coloreBottoneNotte: _coloreBottoneNotte.value,
+      opacitaBottoneNotte: _opacitaBottoneNotte,
+    );
+    _temiSalvati[idx] = aggiornato;
+    _temaPersonalizzatoAttivoId = id;
+    _tema = AppTema.personalizzato;
+    await _salvaTemiSuPrefs();
+    notifyListeners();
+    return true;
   }
 
   Future<void> eliminaTema(String id) async {

@@ -12,7 +12,7 @@ import 'download_screen.dart';
 import 'pdf_viewer_screen.dart';
 import 'video_screen.dart';
 import 'predicazioni_screen.dart';
-import 'tema_personalizzato_screen.dart' show TemaPersonalizzatoScreen;
+import 'tema_personalizzato_screen.dart';
 
 const _kVerde = Color(0xFF2E7D32);
 const _kBlu   = Color(0xFF1829E8);
@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ImpostazioniSheet(),
+      builder: (_) => _ImpostazioniSheet(onOpenChangelog: _apriChangelog),
     );
   }
 
@@ -294,178 +294,180 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      isDesktop ? 48 : 28, 8, isDesktop ? 48 : 28, 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text('Ogni tipo di insegnamento',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: isDesktop ? 30 : 26,
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.italic,
-                            color: coloreTesto,
-                            shadows: provider.isChiaro ? [] : [
-                              const Shadow(blurRadius: 8, color: Colors.black54)
-                            ],
-                          )),
-                      const SizedBox(height: 6),
-                      Text('Studi biblici di Ellero Balzani',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: coloreTestoSec,
-                            fontStyle: FontStyle.italic,
-                            shadows: provider.isChiaro ? [] : [
-                              const Shadow(blurRadius: 6, color: Colors.black54)
-                            ],
-                          )),
-                      const SizedBox(height: 36),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                        isDesktop ? 48 : 28, 24, isDesktop ? 48 : 28, 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Ogni tipo di insegnamento',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: isDesktop ? 30 : 26,
+                              fontWeight: FontWeight.bold,
+                              fontStyle: FontStyle.italic,
+                              color: coloreTesto,
+                              shadows: provider.isChiaro ? [] : [
+                                const Shadow(blurRadius: 8, color: Colors.black54)
+                              ],
+                            )),
+                        const SizedBox(height: 6),
+                        Text('Studi biblici di Ellero Balzani',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: coloreTestoSec,
+                              fontStyle: FontStyle.italic,
+                              shadows: provider.isChiaro ? [] : [
+                                const Shadow(blurRadius: 6, color: Colors.black54)
+                              ],
+                            )),
+                        const SizedBox(height: 36),
 
-                      if (isModerno) ...[
-                        ...List.generate(voci.length, (i) {
-                          final voce = voci[i];
-                          final isUltimo = i == voci.length - 1;
-                          return Container(
-                            color: kSfondoRiga,
-                            child: Column(children: [
-                              InkWell(
-                                onTap: voce.onTap,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 4, vertical: 16),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(voce.icona, size: 22, color: coloreTestoSec),
-                                      const SizedBox(width: 16),
-                                      Flexible(child: Text(voce.titoloModerno,
-                                          textAlign: TextAlign.center,
-                                          softWrap: true,
-                                          style: TextStyle(
-                                              color: coloreTesto,
-                                              fontSize: fontSize,
-                                              fontWeight: FontWeight.w500))),
-                                    ],
+                        if (isModerno) ...[
+                          ...List.generate(voci.length, (i) {
+                            final voce = voci[i];
+                            final isUltimo = i == voci.length - 1;
+                            return Container(
+                              color: kSfondoRiga,
+                              child: Column(children: [
+                                InkWell(
+                                  onTap: voce.onTap,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 4, vertical: 16),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(voce.icona, size: 22, color: coloreTestoSec),
+                                        const SizedBox(width: 16),
+                                        Flexible(child: Text(voce.titoloModerno,
+                                            textAlign: TextAlign.center,
+                                            softWrap: true,
+                                            style: TextStyle(
+                                                color: coloreTesto,
+                                                fontSize: fontSize,
+                                                fontWeight: FontWeight.w500))),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                              if (!isUltimo)
-                                Divider(height: 1, thickness: 1, color: kDivisoreColore),
-                            ]),
-                          );
-                        }),
-                      ] else if (isPersonalizzato) ...[
-                        Builder(builder: (context) {
-                          final stile  = provider.stileBottone;
-                          final radius = stile == StileBottone.pill  ? 30.0
-                              : stile == StileBottone.sharp ?  2.0 : 14.0;
-                          final testoC = provider.coloreTestoBottone;
-                          final isOutline = provider.isStileOutline;
-                          return Column(children: [
-                            ...voci.map((voce) => Padding(
-                              padding: EdgeInsets.only(
-                                  bottom: stile == StileBottone.lista ? 0 : 10),
-                              child: voce.centrato
-                                  ? _buildBottoneCentrato(context,
-                                  titolo: voce.titoloClassico,
-                                  icona: voce.icona,
-                                  colore: coloreBottone,
-                                  testoC: isOutline ? coloreBottone : testoC,
-                                  fontSize: fontSize,
-                                  isDesktop: isDesktop,
-                                  opacita: opacitaBottone,
-                                  stile: stile, radius: radius,
-                                  onTap: voce.onTap)
-                                  : _buildBottone(context,
-                                  titolo: voce.titoloClassico,
-                                  icona: voce.icona,
-                                  colore: coloreBottone,
-                                  testoC: isOutline ? coloreBottone : testoC,
-                                  fontSize: fontSize,
-                                  isDesktop: isDesktop,
-                                  opacita: opacitaBottone,
-                                  stile: stile, radius: radius,
-                                  onTap: voce.onTap),
-                            )),
-                          ]);
-                        }),
-                      ] else ...[
-                        // Classico — colori fissi originali, testo bianco
-                        ...voci.map((voce) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: voce.centrato
-                              ? _buildBottoneCentrato(context,
-                              titolo: voce.titoloClassico,
-                              icona: voce.icona,
-                              colore: voce.coloreClassico,
-                              testoC: Colors.white,
-                              fontSize: fontSize,
-                              isDesktop: isDesktop,
-                              opacita: 0.92,
-                              onTap: voce.onTap)
-                              : _buildBottone(context,
-                              titolo: voce.titoloClassico,
-                              icona: voce.icona,
-                              colore: voce.coloreClassico,
-                              testoC: Colors.white,
-                              fontSize: fontSize,
-                              isDesktop: isDesktop,
-                              opacita: 0.92,
-                              onTap: voce.onTap),
-                        )),
-                      ],
-
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _buildIconaLink(
-                            icona: Icons.language, etichetta: 'Sito web',
-                            url: 'https://www.ognitipodiinsegnamento.it',
-                            provider: provider,
-                            sfondoIcona: kSfondoIcona,
-                            coloreIcona: coloreIconaSocial,
-                            coloreEtichetta: coloreTestoSec,
-                            isModerno: isModerno,
-                            isPersonalizzato: isPersonalizzato,
-                            stile: provider.stileBottone,
-                            radius: provider.radiusBottone,
-                            opacita: opacitaBottone,
-                          ),
-                          const SizedBox(width: 24),
-                          _buildIconaLink(
-                            icona: Icons.facebook, etichetta: 'Facebook',
-                            url: 'https://www.facebook.com/profile.php?id=61584977437002',
-                            provider: provider,
-                            sfondoIcona: kSfondoIcona,
-                            coloreIcona: coloreIconaSocial,
-                            coloreEtichetta: coloreTestoSec,
-                            isModerno: isModerno,
-                            isPersonalizzato: isPersonalizzato,
-                            stile: provider.stileBottone,
-                            radius: provider.radiusBottone,
-                            opacita: opacitaBottone,
-                          ),
-                          const SizedBox(width: 24),
-                          _buildSpotifyLink(
-                            provider: provider,
-                            sfondoIcona: kSfondoIcona,
-                            coloreIcona: coloreIconaSocial,
-                            coloreEtichetta: coloreTestoSec,
-                            isModerno: isModerno,
-                            isPersonalizzato: isPersonalizzato,
-                            stile: provider.stileBottone,
-                            radius: provider.radiusBottone,
-                            opacita: opacitaBottone,
-                          ),
+                                if (!isUltimo)
+                                  Divider(height: 1, thickness: 1, color: kDivisoreColore),
+                              ]),
+                            );
+                          }),
+                        ] else if (isPersonalizzato) ...[
+                          Builder(builder: (context) {
+                            final stile  = provider.stileBottone;
+                            final radius = stile == StileBottone.pill  ? 30.0
+                                : stile == StileBottone.sharp ?  2.0 : 14.0;
+                            final testoC = provider.coloreTestoBottone;
+                            final isOutline = provider.isStileOutline;
+                            return Column(children: [
+                              ...voci.map((voce) => Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: stile == StileBottone.lista ? 0 : 10),
+                                child: voce.centrato
+                                    ? _buildBottoneCentrato(context,
+                                    titolo: voce.titoloClassico,
+                                    icona: voce.icona,
+                                    colore: coloreBottone,
+                                    testoC: isOutline ? coloreBottone : testoC,
+                                    fontSize: fontSize,
+                                    isDesktop: isDesktop,
+                                    opacita: opacitaBottone,
+                                    stile: stile, radius: radius,
+                                    onTap: voce.onTap)
+                                    : _buildBottone(context,
+                                    titolo: voce.titoloClassico,
+                                    icona: voce.icona,
+                                    colore: coloreBottone,
+                                    testoC: isOutline ? coloreBottone : testoC,
+                                    fontSize: fontSize,
+                                    isDesktop: isDesktop,
+                                    opacita: opacitaBottone,
+                                    stile: stile, radius: radius,
+                                    onTap: voce.onTap),
+                              )),
+                            ]);
+                          }),
+                        ] else ...[
+                          // Classico — colori fissi originali, testo bianco
+                          ...voci.map((voce) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: voce.centrato
+                                ? _buildBottoneCentrato(context,
+                                titolo: voce.titoloClassico,
+                                icona: voce.icona,
+                                colore: voce.coloreClassico,
+                                testoC: Colors.white,
+                                fontSize: fontSize,
+                                isDesktop: isDesktop,
+                                opacita: 0.92,
+                                onTap: voce.onTap)
+                                : _buildBottone(context,
+                                titolo: voce.titoloClassico,
+                                icona: voce.icona,
+                                colore: voce.coloreClassico,
+                                testoC: Colors.white,
+                                fontSize: fontSize,
+                                isDesktop: isDesktop,
+                                opacita: 0.92,
+                                onTap: voce.onTap),
+                          )),
                         ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
+
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildIconaLink(
+                              icona: Icons.language, etichetta: 'Sito web',
+                              url: 'https://www.ognitipodiinsegnamento.it',
+                              provider: provider,
+                              sfondoIcona: kSfondoIcona,
+                              coloreIcona: coloreIconaSocial,
+                              coloreEtichetta: coloreTestoSec,
+                              isModerno: isModerno,
+                              isPersonalizzato: isPersonalizzato,
+                              stile: provider.stileBottone,
+                              radius: provider.radiusBottone,
+                              opacita: opacitaBottone,
+                            ),
+                            const SizedBox(width: 24),
+                            _buildIconaLink(
+                              icona: Icons.facebook, etichetta: 'Facebook',
+                              url: 'https://www.facebook.com/profile.php?id=61584977437002',
+                              provider: provider,
+                              sfondoIcona: kSfondoIcona,
+                              coloreIcona: coloreIconaSocial,
+                              coloreEtichetta: coloreTestoSec,
+                              isModerno: isModerno,
+                              isPersonalizzato: isPersonalizzato,
+                              stile: provider.stileBottone,
+                              radius: provider.radiusBottone,
+                              opacita: opacitaBottone,
+                            ),
+                            const SizedBox(width: 24),
+                            _buildSpotifyLink(
+                              provider: provider,
+                              sfondoIcona: kSfondoIcona,
+                              coloreIcona: coloreIconaSocial,
+                              coloreEtichetta: coloreTestoSec,
+                              isModerno: isModerno,
+                              isPersonalizzato: isPersonalizzato,
+                              stile: provider.stileBottone,
+                              radius: provider.radiusBottone,
+                              opacita: opacitaBottone,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -629,11 +631,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? Border.all(color: provider.coloreBottoneAttivo, width: 1.5)
                 : isModerno ? null : Border.all(color: Colors.white30, width: 1),
           ),
-          child: Icon(icona, color: coloreIcona, size: 28),
+          child: Icon(icona, color: isOutline ? provider.coloreBottoneAttivo : coloreIcona, size: 28),
         ),
         const SizedBox(height: 5),
         Text(etichetta, style: TextStyle(
-            color: coloreEtichetta, fontSize: 11, letterSpacing: 0.3)),
+            color: isOutline ? provider.coloreBottoneAttivo : coloreEtichetta, fontSize: 11, letterSpacing: 0.3)),
       ]),
     );
   }
@@ -671,11 +673,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 : isModerno ? null : Border.all(color: Colors.white30, width: 1),
           ),
           child: Center(child: FaIcon(FontAwesomeIcons.spotify,
-              color: coloreIcona, size: 26)),
+              color: isOutline ? provider.coloreBottoneAttivo : coloreIcona, size: 26)),
         ),
         const SizedBox(height: 5),
         Text('Spotify', style: TextStyle(
-            color: coloreEtichetta, fontSize: 11, letterSpacing: 0.3)),
+            color: isOutline ? provider.coloreBottoneAttivo : coloreEtichetta, fontSize: 11, letterSpacing: 0.3)),
       ]),
     );
   }
@@ -683,13 +685,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
 // ── Bottom sheet impostazioni ────────────────────────────────
 class _ImpostazioniSheet extends StatefulWidget {
+  final VoidCallback onOpenChangelog;
+  const _ImpostazioniSheet({required this.onOpenChangelog});
   @override
   State<_ImpostazioniSheet> createState() => _ImpostazioniSheetState();
 }
 
 class _ImpostazioniSheetState extends State<_ImpostazioniSheet> {
   bool _predefinitaEspansa = false;
-  bool _modernoEspanso = false;
   bool _personalizzatoEspanso = false;
 
   @override
@@ -811,6 +814,8 @@ class _ImpostazioniSheetState extends State<_ImpostazioniSheet> {
             ),
             const SizedBox(height: 8),
 
+            const SizedBox(height: 8),
+
             GestureDetector(
               onTap: () => setState(
                       () => _personalizzatoEspanso = !_personalizzatoEspanso),
@@ -903,7 +908,7 @@ class _ImpostazioniSheetState extends State<_ImpostazioniSheet> {
                         Navigator.pop(context);
                         Future.delayed(const Duration(milliseconds: 200), () {
                           Navigator.push(context, MaterialPageRoute(
-                            builder: (_) => TemaPersonalizzatoScreen(),
+                            builder: (_) => const TemaPersonalizzatoScreen(),
                           ));
                         });
                       },
@@ -1015,8 +1020,7 @@ class _ImpostazioniSheetState extends State<_ImpostazioniSheet> {
               onTap: () {
                 Navigator.pop(context);
                 Future.delayed(const Duration(milliseconds: 200), () {
-                  final state = context.findAncestorStateOfType<_HomeScreenState>();
-                  state?._apriChangelog();
+                  widget.onOpenChangelog();
                 });
               },
               child: Container(
@@ -1058,133 +1062,103 @@ class _ImpostazioniSheetState extends State<_ImpostazioniSheet> {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: attivo
-            ? Colors.white.withOpacity(0.15)
-            : Colors.white.withOpacity(0.05),
+        color: attivo ? Colors.white.withOpacity(0.15) : Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: attivo ? Colors.white54 : Colors.white12, width: 1),
+        border: Border.all(color: attivo ? Colors.white54 : Colors.white12, width: 1),
       ),
-      child: Column(
-        children: [
-          // Riga principale: selezione + check
-          InkWell(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            onTap: () => context.read<AppThemeProvider>()
-                .selezionaTemaPersonalizzato(tema.id),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              child: Row(children: [
-                Icon(Icons.palette_outlined,
-                    color: attivo ? Colors.white : Colors.white54, size: 20),
-                const SizedBox(width: 12),
-                Expanded(child: Text(tema.nome, style: TextStyle(
-                    color: attivo ? Colors.white : Colors.white70,
-                    fontSize: 14, fontWeight: FontWeight.w600))),
-                if (attivo)
-                  const Icon(Icons.check_circle_rounded,
-                      color: Colors.white, size: 18),
-              ]),
-            ),
-          ),
-          // Riga azioni
-          Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(
-                  color: attivo ? Colors.white24 : Colors.white12, width: 1)),
-            ),
+      child: Column(children: [
+        InkWell(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          onTap: () => context.read<AppThemeProvider>().selezionaTemaPersonalizzato(tema.id),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             child: Row(children: [
-              // Modifica
-              Expanded(child: InkWell(
-                borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(12)),
-                onTap: () => _modificaTema(context, tema),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.tune_rounded, color: Colors.white54, size: 15),
-                    SizedBox(width: 4),
-                    Text('Modifica', style: TextStyle(
-                        color: Colors.white54, fontSize: 11)),
-                  ]),
-                ),
-              )),
-              Container(width: 1, height: 36,
-                  color: attivo ? Colors.white24 : Colors.white12),
-              // Clona
-              Expanded(child: InkWell(
-                onTap: () async {
-                  final ok = await context.read<AppThemeProvider>()
-                      .clonaTema(tema.id);
-                  if (!ok && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Massimo 5 temi raggiunto'),
-                            backgroundColor: Colors.orange,
-                            duration: Duration(seconds: 2)));
-                  }
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.copy_rounded, color: Colors.white54, size: 15),
-                    SizedBox(width: 4),
-                    Text('Clona', style: TextStyle(
-                        color: Colors.white54, fontSize: 11)),
-                  ]),
-                ),
-              )),
-              Container(width: 1, height: 36,
-                  color: attivo ? Colors.white24 : Colors.white12),
-              // Rinomina
-              Expanded(child: InkWell(
-                onTap: () => _rinominaTema(context, tema),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.edit_outlined, color: Colors.white54, size: 15),
-                    SizedBox(width: 4),
-                    Text('Rinomina', style: TextStyle(
-                        color: Colors.white54, fontSize: 11)),
-                  ]),
-                ),
-              )),
-              Container(width: 1, height: 36,
-                  color: attivo ? Colors.white24 : Colors.white12),
-              // Elimina
-              Expanded(child: InkWell(
-                borderRadius: const BorderRadius.only(
-                    bottomRight: Radius.circular(12)),
-                onTap: () => _eliminaTema(context, tema),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(Icons.delete_outline_rounded,
-                        color: Colors.redAccent, size: 15),
-                    SizedBox(width: 4),
-                    Text('Elimina', style: TextStyle(
-                        color: Colors.redAccent, fontSize: 11)),
-                  ]),
-                ),
-              )),
+              Icon(Icons.palette_outlined, color: attivo ? Colors.white : Colors.white54, size: 20),
+              const SizedBox(width: 12),
+              Expanded(child: Text(tema.nome, style: TextStyle(
+                  color: attivo ? Colors.white : Colors.white70,
+                  fontSize: 14, fontWeight: FontWeight.w600))),
+              if (attivo) const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
             ]),
           ),
-        ],
-      ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            border: Border(top: BorderSide(color: attivo ? Colors.white24 : Colors.white12, width: 1)),
+          ),
+          child: Row(children: [
+            Expanded(child: InkWell(
+              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(12)),
+              onTap: () => _modificaTema(context, tema),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.tune_rounded, color: Colors.white54, size: 15),
+                  SizedBox(width: 4),
+                  Text('Modifica', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                ]),
+              ),
+            )),
+            Container(width: 1, height: 36, color: attivo ? Colors.white24 : Colors.white12),
+            Expanded(child: InkWell(
+              onTap: () async {
+                final ok = await context.read<AppThemeProvider>().clonaTema(tema.id);
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('Massimo 5 temi raggiunto'),
+                      backgroundColor: Colors.orange,
+                      duration: Duration(seconds: 2)));
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.copy_rounded, color: Colors.white54, size: 15),
+                  SizedBox(width: 4),
+                  Text('Clona', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                ]),
+              ),
+            )),
+            Container(width: 1, height: 36, color: attivo ? Colors.white24 : Colors.white12),
+            Expanded(child: InkWell(
+              onTap: () => _rinominaTema(context, tema),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.edit_outlined, color: Colors.white54, size: 15),
+                  SizedBox(width: 4),
+                  Text('Rinomina', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                ]),
+              ),
+            )),
+            Container(width: 1, height: 36, color: attivo ? Colors.white24 : Colors.white12),
+            Expanded(child: InkWell(
+              borderRadius: const BorderRadius.only(bottomRight: Radius.circular(12)),
+              onTap: () => _eliminaTema(context, tema),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 15),
+                  SizedBox(width: 4),
+                  Text('Elimina', style: TextStyle(color: Colors.redAccent, fontSize: 11)),
+                ]),
+              ),
+            )),
+          ]),
+        ),
+      ]),
     );
   }
 
-  Future<void> _modificaTema(
-      BuildContext context, TemaPersonalizzatoSalvato tema) async {
+  Future<void> _modificaTema(BuildContext context, TemaPersonalizzatoSalvato tema) async {
     Navigator.pop(context);
     await Future.delayed(const Duration(milliseconds: 200));
     if (!context.mounted) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TemaPersonalizzatoScreen(temaEsistente: tema),
-      ),
-    );
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => TemaPersonalizzatoScreen(temaEsistente: tema),
+    ));
   }
+
   Future<void> _rinominaTema(
       BuildContext context, TemaPersonalizzatoSalvato tema) async {
     final controller = TextEditingController(text: tema.nome);

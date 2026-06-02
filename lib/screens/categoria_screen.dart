@@ -334,11 +334,9 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
         kBottoneBordo = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo : _kBottoneClassico;
         kAttivoColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.5)
-            : _kAttivoClassico;
+            ? provider.coloreBottoneAttivo : _kAttivoClassico;
         kPlayerColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kPlayerClassico;
+            ? provider.coloreBottoneAttivo : _kPlayerClassico;
         kAppBarColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
             : _kAppBarClassico;
@@ -487,9 +485,7 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                                         ),
                                       ),
                                       InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(voce.nomePdf),
+                                        onTap: () => _riproduci(voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 8, vertical: 14),
@@ -550,13 +546,11 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                                             fontSize: fontSize),
                                       )),
                                       InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(voce.nomePdf),
+                                        onTap: () => _riproduci(voce.nomePdf),
                                         child: Padding(
                                           padding: const EdgeInsets.only(left: 8),
                                           child: Icon(Icons.record_voice_over_rounded,
-                                              size: 20, color: kTestoSecColore),
+                                              size: 20, color: isAttivo ? kTestoColore : testoC),
                                         ),
                                       ),
                                     ],
@@ -569,84 +563,81 @@ class _CategoriaScreenState extends State<CategoriaScreen> {
                           }
 
                           return Padding(
-                              padding: EdgeInsets.only(top: index == 1 ? 12 : 4),
-                              child: Container(
-                                decoration: pOutline ? BoxDecoration(
-                                  borderRadius: BorderRadius.circular(pRadius),
-                                  border: Border.all(color: pColore, width: 1.5),
-                                ) : null,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(pRadius),
-                                  child: Material(
-                                    color: isAttivo ? kAttivoColore
-                                        : pOutline ? Colors.transparent
-                                        : pColore.withOpacity(pOpacita),
-                                child: IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(
-                                        child: InkWell(
-                                          onTap: () => Navigator.push(context,
-                                              MaterialPageRoute(builder: (_) =>
-                                                  PdfViewerScreen(
-                                                      nomePdf: voce.nomePdf,
-                                                      titolo: voce.titolo))),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 14),
-                                            child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Icon(Icons.picture_as_pdf_rounded,
-                                                    size: 16, color: kTestoSecColore),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    _titoloVisualizzato(voce.titolo).toUpperCase(),
-                                                    textAlign: TextAlign.center,
-                                                    softWrap: true,
-                                                    style: TextStyle(
-                                                      color: kTestoColore,
-                                                      fontSize: fontSize,
-                                                      fontWeight: isAttivo
-                                                          ? FontWeight.bold : FontWeight.normal,
+                            padding: EdgeInsets.only(top: index == 1 ? 12 : 4),
+                            child: Container(
+                              decoration: pOutline ? BoxDecoration(
+                                borderRadius: BorderRadius.circular(pRadius),
+                                border: Border.all(color: pColore, width: 1.5),
+                              ) : null,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(pRadius),
+                                child: Material(
+                                  color: pOutline ? Colors.transparent
+                                      : pColore.withOpacity(isAttivo ? 1.0 : pOpacita),
+                                  child: IntrinsicHeight(
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                      children: [
+                                        Expanded(
+                                          child: InkWell(
+                                            onTap: () => Navigator.push(context,
+                                                MaterialPageRoute(builder: (_) =>
+                                                    PdfViewerScreen(
+                                                        nomePdf: voce.nomePdf,
+                                                        titolo: voce.titolo))),
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(
+                                                  horizontal: 12, vertical: 14),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.picture_as_pdf_rounded,
+                                                      size: 16, color: testoC),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      _titoloVisualizzato(voce.titolo).toUpperCase(),
+                                                      textAlign: TextAlign.center,
+                                                      softWrap: true,
+                                                      style: TextStyle(
+                                                        color: testoC,
+                                                        fontSize: fontSize,
+                                                        fontWeight: isAttivo
+                                                            ? FontWeight.bold : FontWeight.normal,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      Container(width: 1,
-                                          color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
-                                      InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(voce.nomePdf),
-                                        child: SizedBox(
-                                          width: 48,
-                                          child: Center(
-                                            child: isAttivo && _isLoading && !_isWindows
-                                                ? SizedBox(width: 18, height: 18,
-                                                child: CircularProgressIndicator(
-                                                    color: kTestoColore, strokeWidth: 2))
-                                                : Icon(
-                                                isAttivo && _isPlaying && !_isWindows
-                                                    ? Icons.pause_circle_outline_rounded
-                                                    : Icons.record_voice_over_rounded,
-                                                size: 20,
-                                                color: isAttivo ? kTestoColore : kTestoSecColore),
+                                        Container(width: 1,
+                                            color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
+                                        InkWell(
+                                          onTap: () => _riproduci(voce.nomePdf),
+                                          child: SizedBox(
+                                            width: 48,
+                                            child: Center(
+                                              child: isAttivo && _isLoading && !_isWindows
+                                                  ? SizedBox(width: 18, height: 18,
+                                                  child: CircularProgressIndicator(
+                                                      color: kTestoColore, strokeWidth: 2))
+                                                  : Icon(
+                                                  isAttivo && _isPlaying && !_isWindows
+                                                      ? Icons.pause_circle_outline_rounded
+                                                      : Icons.record_voice_over_rounded,
+                                                  size: 20,
+                                                  color: isAttivo ? kTestoColore : kTestoSecColore),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
+                            ),
                           );
                         }
                       },

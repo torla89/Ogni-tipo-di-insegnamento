@@ -560,12 +560,9 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
       default:
         kBottoneColore = _kBottoneClassicoP;
         kBottoneBordo = _kBottoneClassicoP;
-        kAttivoColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.5)
-            : _kAttivoClassicoP;
+        kAttivoColore = _kAttivoClassicoP;
         kPlayerColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kPlayerClassicoP;
+            ? provider.coloreBottoneAttivo : _kPlayerClassicoP;
         kAppBarColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
             : _kAppBarClassicoP;
@@ -705,8 +702,6 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.stretch,
                                               children: [
                                                 InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
                                                   onTap: () => _riproduci(file),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
@@ -722,9 +717,7 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                                 ),
                                                 Expanded(
                                                   child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(file),
+                                                    onTap: () => _riproduci(file),
                                                     child: Padding(
                                                       padding: const EdgeInsets.symmetric(
                                                           vertical: 14, horizontal: 4),
@@ -769,9 +762,7 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                     if (pLista) {
                                       return Column(children: [
                                         InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(file),
+                                          onTap: () => _riproduci(file),
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 4, vertical: 14),
@@ -804,72 +795,69 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                     }
 
                                     return Padding(
-                                        padding: const EdgeInsets.only(bottom: 6),
-                                        child: Container(
-                                          decoration: pOutline ? BoxDecoration(
-                                            borderRadius: BorderRadius.circular(pRadius),
-                                            border: Border.all(color: pColore, width: 1.5),
-                                          ) : null,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(pRadius),
-                                            child: Material(
-                                              color: isAttivo ? kAttivoColore
-                                                  : pOutline ? Colors.transparent
-                                                  : pColore.withOpacity(pOpacita),
-                                          child: IntrinsicHeight(
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                                              children: [
-                                                Expanded(
-                                                  child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(file),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.symmetric(
-                                                          horizontal: 12, vertical: 14),
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: [
-                                                          _iconaRiga(file, testoC, size: 16),
-                                                          const SizedBox(width: 8),
-                                                          Expanded(
-                                                            child: Text(
-                                                              _displayName(file).toUpperCase(),
-                                                              textAlign: TextAlign.center,
-                                                              softWrap: true,
-                                                              style: TextStyle(
-                                                                fontSize: fontSize,
-                                                                color: testoC,
-                                                                letterSpacing: 0.3,
-                                                                fontWeight: isAttivo
-                                                                    ? FontWeight.bold : FontWeight.w500,
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Container(
+                                        decoration: pOutline ? BoxDecoration(
+                                          borderRadius: BorderRadius.circular(pRadius),
+                                          border: Border.all(color: pColore, width: 1.5),
+                                        ) : null,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(pRadius),
+                                          child: Material(
+                                            color: pOutline ? Colors.transparent
+                                                : pColore.withOpacity(isAttivo ? 1.0 : pOpacita),
+                                            child: IntrinsicHeight(
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () => _riproduci(file),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(
+                                                            horizontal: 12, vertical: 14),
+                                                        child: Row(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            _iconaRiga(file, testoC, size: 16),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                _displayName(file).toUpperCase(),
+                                                                textAlign: TextAlign.center,
+                                                                softWrap: true,
+                                                                style: TextStyle(
+                                                                  fontSize: fontSize,
+                                                                  color: testoC,
+                                                                  letterSpacing: 0.3,
+                                                                  fontWeight: isAttivo
+                                                                      ? FontWeight.bold : FontWeight.w500,
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                                Container(width: 1,
-                                                    color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
-                                                InkWell(
-                                                  onTap: () => _scarica(file),
-                                                  child: SizedBox(
-                                                    width: 44,
-                                                    child: Center(
-                                                      child: Icon(Icons.download_rounded,
-                                                          size: 18, color: testoC),
+                                                  Container(width: 1,
+                                                      color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
+                                                  InkWell(
+                                                    onTap: () => _scarica(file),
+                                                    child: SizedBox(
+                                                      width: 44,
+                                                      child: Center(
+                                                        child: Icon(Icons.download_rounded,
+                                                            size: 18, color: testoC),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
                                     );
                                   }
                                 } else {
@@ -955,9 +943,7 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                                               size: 16),
                                                         ),
                                                         InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
+                                                          onTap: () => _riproduci(parte),
                                                           child: Padding(
                                                             padding: const EdgeInsets.symmetric(
                                                                 horizontal: 6, vertical: 12),
@@ -976,9 +962,7 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                                         ),
                                                         Expanded(
                                                           child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
+                                                            onTap: () => _riproduci(parte),
                                                             child: Padding(
                                                               padding: const EdgeInsets.symmetric(
                                                                   vertical: 12),
@@ -1072,8 +1056,6 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
                                               final isAttivo = _audioAttivo == parte;
                                               return Column(children: [
                                                 InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
                                                   onTap: () => _riproduci(parte),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
@@ -1107,131 +1089,135 @@ class _PredicazioniScreenState extends State<PredicazioniScreen> {
 
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 6),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(pRadius2),
-                                        child: Material(
-                                          color: haAttivoInGruppo
-                                              ? kAttivoColore
-                                              : pOutline2 ? Colors.transparent
-                                              : pColore2.withOpacity(pOpacita2),
-                                          child: Column(
-                                            children: [
-                                              InkWell(
-                                                onTap: () => setState(() {
-                                                  if (isEspanso) _gruppiEspansi.remove(gruppo.titolo);
-                                                  else _gruppiEspansi.add(gruppo.titolo);
-                                                }),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 12, vertical: 14),
-                                                  child: Row(
-                                                    children: [
-                                                      _iconaRiga(gruppo.parti.first,
-                                                          kTestoColore, size: 18),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: Text(
-                                                          gruppo.titolo.toUpperCase(),
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            fontSize: fontSize,
-                                                            color: kTestoColore,
-                                                            fontWeight: FontWeight.w600,
-                                                            letterSpacing: 0.3,
+                                      child: Container(
+                                        decoration: pOutline2 ? BoxDecoration(
+                                          borderRadius: BorderRadius.circular(pRadius2),
+                                          border: Border.all(color: pColore2, width: 1.5),
+                                        ) : null,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(pRadius2),
+                                          child: Material(
+                                            color: pOutline2 ? Colors.transparent
+                                                : pColore2.withOpacity(haAttivoInGruppo ? 1.0 : pOpacita2),
+                                            child: Column(
+                                              children: [
+                                                InkWell(
+                                                  onTap: () => setState(() {
+                                                    if (isEspanso) _gruppiEspansi.remove(gruppo.titolo);
+                                                    else _gruppiEspansi.add(gruppo.titolo);
+                                                  }),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 12, vertical: 14),
+                                                    child: Row(
+                                                      children: [
+                                                        _iconaRiga(gruppo.parti.first,
+                                                            testoC2, size: 18),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            gruppo.titolo.toUpperCase(),
+                                                            textAlign: TextAlign.center,
+                                                            style: TextStyle(
+                                                              fontSize: fontSize,
+                                                              color: testoC2,
+                                                              fontWeight: FontWeight.w600,
+                                                              letterSpacing: 0.3,
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                      Text('${gruppo.parti.length} parti',
-                                                          style: TextStyle(
-                                                              fontSize: 11,
-                                                              color: testoC2)),
-                                                      const SizedBox(width: 6),
-                                                      AnimatedRotation(
-                                                        turns: isEspanso ? 0.5 : 0,
-                                                        duration: const Duration(milliseconds: 200),
-                                                        child: Icon(Icons.keyboard_arrow_down_rounded,
-                                                            color: testoC2, size: 20),
-                                                      ),
-                                                    ],
+                                                        Text('${gruppo.parti.length} parti',
+                                                            style: TextStyle(
+                                                                fontSize: 11,
+                                                                color: testoC2)),
+                                                        const SizedBox(width: 6),
+                                                        AnimatedRotation(
+                                                          turns: isEspanso ? 0.5 : 0,
+                                                          duration: const Duration(milliseconds: 200),
+                                                          child: Icon(Icons.keyboard_arrow_down_rounded,
+                                                              color: testoC2, size: 20),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              AnimatedSize(
-                                                duration: const Duration(milliseconds: 200),
-                                                curve: Curves.easeInOut,
-                                                child: isEspanso
-                                                    ? Column(
-                                                  children: gruppo.parti.map((parte) {
-                                                    final isAttivo = _audioAttivo == parte;
-                                                    return IntrinsicHeight(
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                        CrossAxisAlignment.stretch,
-                                                        children: [
-                                                          Expanded(
-                                                            child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
-                                                              child: Container(
-                                                                color: isAttivo
-                                                                    ? kAttivoColore
-                                                                    : Colors.black.withOpacity(0.15),
-                                                                padding: const EdgeInsets.symmetric(
-                                                                    horizontal: 16, vertical: 12),
-                                                                child: Row(
-                                                                  mainAxisAlignment:
-                                                                  MainAxisAlignment.center,
-                                                                  children: [
-                                                                    _iconaRiga(parte,
-                                                                        testoC2, size: 14),
-                                                                    const SizedBox(width: 6),
-                                                                    if (isAttivo && _isLoading && !_isWindows)
-                                                                      SizedBox(width: 18, height: 18,
-                                                                          child: CircularProgressIndicator(
-                                                                              color: kTestoColore, strokeWidth: 2))
-                                                                    else
-                                                                      Icon(
-                                                                          isAttivo && _isPlaying && !_isWindows
-                                                                              ? Icons.pause_circle_outline_rounded
-                                                                              : Icons.play_circle_outline_rounded,
-                                                                          size: 18, color: testoC2),
-                                                                    const SizedBox(width: 8),
-                                                                    Text(
-                                                                      _etichettaParte(parte).toUpperCase(),
-                                                                      style: TextStyle(
-                                                                        fontSize: fontSize - 1,
-                                                                        color: testoC2,
-                                                                        fontWeight: isAttivo
-                                                                            ? FontWeight.bold : FontWeight.w500,
+                                                AnimatedSize(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  curve: Curves.easeInOut,
+                                                  child: isEspanso
+                                                      ? Column(
+                                                    children: gruppo.parti.map((parte) {
+                                                      final isAttivo = _audioAttivo == parte;
+                                                      return IntrinsicHeight(
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                          CrossAxisAlignment.stretch,
+                                                          children: [
+                                                            Expanded(
+                                                              child: InkWell(
+                                                                onTap: () => _riproduci(parte),
+                                                                child: Container(
+                                                                  color: isAttivo
+                                                                      ? pColore2.withOpacity(1.0)
+                                                                      : pOutline2 ? Colors.transparent
+                                                                      : Colors.black.withOpacity(0.15),
+                                                                  padding: const EdgeInsets.symmetric(
+                                                                      horizontal: 16, vertical: 12),
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                    MainAxisAlignment.center,
+                                                                    children: [
+                                                                      _iconaRiga(parte,
+                                                                          testoC2, size: 14),
+                                                                      const SizedBox(width: 6),
+                                                                      if (isAttivo && _isLoading && !_isWindows)
+                                                                        SizedBox(width: 18, height: 18,
+                                                                            child: CircularProgressIndicator(
+                                                                                color: kTestoColore, strokeWidth: 2))
+                                                                      else
+                                                                        Icon(
+                                                                            isAttivo && _isPlaying && !_isWindows
+                                                                                ? Icons.pause_circle_outline_rounded
+                                                                                : Icons.play_circle_outline_rounded,
+                                                                            size: 18, color: testoC2),
+                                                                      const SizedBox(width: 8),
+                                                                      Text(
+                                                                        _etichettaParte(parte).toUpperCase(),
+                                                                        style: TextStyle(
+                                                                          fontSize: fontSize - 1,
+                                                                          color: testoC2,
+                                                                          fontWeight: isAttivo
+                                                                              ? FontWeight.bold : FontWeight.w500,
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ],
+                                                                    ],
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () => _scarica(parte),
-                                                            child: Container(
-                                                              width: 44,
-                                                              color: isAttivo
-                                                                  ? kAttivoColore
-                                                                  : Colors.black.withOpacity(0.15),
-                                                              child: Center(
-                                                                child: Icon(Icons.download_rounded,
-                                                                    size: 16, color: testoC2),
+                                                            InkWell(
+                                                              onTap: () => _scarica(parte),
+                                                              child: Container(
+                                                                width: 44,
+                                                                color: isAttivo
+                                                                    ? pColore2.withOpacity(1.0)
+                                                                    : pOutline2 ? Colors.transparent
+                                                                    : Colors.black.withOpacity(0.15),
+                                                                child: Center(
+                                                                  child: Icon(Icons.download_rounded,
+                                                                      size: 16, color: testoC2),
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                )
-                                                    : const SizedBox.shrink(),
-                                              ),
-                                            ],
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  )
+                                                      : const SizedBox.shrink(),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),

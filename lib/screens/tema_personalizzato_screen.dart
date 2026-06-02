@@ -92,9 +92,11 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
         _coloreTestoGiorno   = t.coloreTestoGiorno != null ? Color(t.coloreTestoGiorno!) : null;
         _coloreTestoNotte    = t.coloreTestoNotte  != null ? Color(t.coloreTestoNotte!)  : null;
         _nomeController.text = t.nome;
+        _sfondoAnteprima = _indiceSfondoFisso(t.sfondoFissoId);
       } else {
         _alternanza          = AlternanzaSfondo.fisso;
         _sfondoFissoId       = 'chiaro_primavera';
+        _sfondoAnteprima     = _indiceSfondoFisso('chiaro_primavera');
         _sfondoGiornoId      = 'chiaro_primavera';
         _sfondoNotteId       = 'scuro_lago';
         _stileBottone        = StileBottone.classico;
@@ -116,6 +118,11 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
   void dispose() {
     _nomeController.dispose();
     super.dispose();
+  }
+
+  int _indiceSfondoFisso(String id) {
+    final idx = sfondiDisponibili.indexWhere((s) => s.id == id);
+    return idx >= 0 ? idx : 0;
   }
 
   void _toggleSezione(String id) => setState(() {
@@ -150,7 +157,6 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
 
   bool get _isTestoAutomatico => _coloreTesto == null;
 
-  // Calcola colore testo automatico dalla luminanza di un colore bottone
   Color _testoAutoPerColore(Color c) {
     final lum = (0.299 * c.red + 0.587 * c.green + 0.114 * c.blue) / 255;
     return lum > 0.5 ? Colors.black : Colors.white;
@@ -202,319 +208,309 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-        children: [
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+            children: [
 
-          // ── ALTERNANZA ───────────────────────────────────────
-          _intestazioneSezione(id: 'alternanza',
-              titolo: 'MODALITÀ ALTERNANZA SFONDO',
-              icona: Icons.image_outlined,
-              sottotitolo: _descAlternanza(_alternanza)),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: _isEspansa('alternanza')
-                ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                child: _card(child: Column(children: _opzioniAlternanza())))
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 8),
+              // ── ALTERNANZA ───────────────────────────────────────
+              _intestazioneSezione(id: 'alternanza',
+                  titolo: 'MODALITÀ ALTERNANZA SFONDO',
+                  icona: Icons.image_outlined,
+                  sottotitolo: _descAlternanza(_alternanza)),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _isEspansa('alternanza')
+                    ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                    child: _card(child: Column(children: _opzioniAlternanza())))
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 8),
 
-          // ── SFONDO ───────────────────────────────────────────
-          _intestazioneSezione(id: 'sfondo',
-              titolo: 'SCELTA SFONDO',
-              icona: Icons.wallpaper_rounded,
-              sottotitolo: _descSfondo()),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: _isEspansa('sfondo')
-                ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                child: _sfondoSelector())
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 8),
+              // ── SFONDO ───────────────────────────────────────────
+              _intestazioneSezione(id: 'sfondo',
+                  titolo: 'SCELTA SFONDO',
+                  icona: Icons.wallpaper_rounded,
+                  sottotitolo: _descSfondo()),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _isEspansa('sfondo')
+                    ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                    child: _sfondoSelector())
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 8),
 
-          // ── STILE ────────────────────────────────────────────
-          _intestazioneSezione(id: 'stile',
-              titolo: 'STILE BOTTONI',
-              icona: Icons.smart_button_rounded,
-              sottotitolo: _descStile(_stileBottone)),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: _isEspansa('stile')
-                ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                child: _card(child: Column(children: _opzioniStile())))
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 8),
+              // ── STILE ────────────────────────────────────────────
+              _intestazioneSezione(id: 'stile',
+                  titolo: 'STILE BOTTONI',
+                  icona: Icons.smart_button_rounded,
+                  sottotitolo: _descStile(_stileBottone)),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _isEspansa('stile')
+                    ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                    child: _card(child: Column(children: _opzioniStile())))
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 8),
 
-          // ── COLORE TESTO ──────────────────────────────────────
-          _intestazioneSezione(
-            id: 'colore_testo',
-            titolo: 'COLORE TESTO BOTTONI',
-            icona: Icons.format_color_text_rounded,
-            sottotitolo: _isGiornoNotte
-                ? (_coloreTestoGiorno == null && _coloreTestoNotte == null
-                ? 'Automatico per giorno/notte'
-                : '☀ ${_coloreTestoGiorno != null ? _nomePalette(_coloreTestoGiorno!) : "Auto"}  🌙 ${_coloreTestoNotte != null ? _nomePalette(_coloreTestoNotte!) : "Auto"}')
-                : (_coloreTesto == null
-                ? 'Automatico (basato sul colore bottone)'
-                : _nomePalette(_coloreTesto!)),
-            puntoColore: _isGiornoNotte ? null : _coloreTesto,
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            child: _isEspansa('colore_testo')
-                ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                child: _card(child: _sezioneColoreTesto()))
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 8),
+              // ── COLORE TESTO ──────────────────────────────────────
+              _intestazioneSezione(
+                id: 'colore_testo',
+                titolo: 'COLORE TESTO BOTTONI',
+                icona: Icons.format_color_text_rounded,
+                sottotitolo: _isTestoAutomatico
+                    ? 'Automatico (basato sul colore bottone)'
+                    : _nomePalette(_coloreTestoBottone),
+                puntoColore: _isTestoAutomatico ? null : _coloreTestoBottone,
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _isEspansa('colore_testo')
+                    ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                    child: _card(child: _sezioneColoreTesto()))
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 8),
 
-          // ── COLORE (globale, solo se NON giornoNotte) ─────────
-          if (!_isGiornoNotte) ...[
-            _intestazioneSezione(id: 'colore',
-                titolo: 'COLORE BOTTONI',
-                icona: Icons.palette_outlined,
-                sottotitolo: _nomePalette(_coloreBottone),
-                puntoColore: _coloreBottone),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: _isEspansa('colore')
-                  ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                  child: _card(child: _gridPalette(
-                      selezionato: _coloreBottone,
-                      onTap: (c) => setState(() => _coloreBottone = c))))
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 8),
-
-            // ── TRASPARENZA (globale) ─────────────────────────
-            _intestazioneSezione(id: 'trasparenza',
-                titolo: 'TRASPARENZA BOTTONI',
-                icona: Icons.opacity_rounded,
-                sottotitolo: '${(_opacitaBottone * 100).toStringAsFixed(0)}%'),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: _isEspansa('trasparenza')
-                  ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                  child: _card(child: _sliderOpacita(
-                      valore: _opacitaBottone,
-                      colore: _coloreBottone,
-                      coloreSlider: Colors.white,
-                      onChanged: (v) => setState(() => _opacitaBottone = v))))
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // ── COLORE BOTTONI giorno/notte (solo se _isGiornoNotte) ─────
-          if (_isGiornoNotte) ...[
-            _intestazioneSezione(id: 'testo',
-                titolo: 'COLORE BOTTONI',
-                icona: Icons.tune_rounded,
-                sottotitolo: 'Colore e opacità diversi per giorno/notte'),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              child: _isEspansa('testo')
-                  ? Padding(padding: const EdgeInsets.only(bottom: 4),
-                  child: _card(child: _sezioneTestoGiornoNotte()))
-                  : const SizedBox.shrink(),
-            ),
-          ],
-          const SizedBox(height: 20),
-
-          // ── ANTEPRIMA ─────────────────────────────────────────
-          _sezione('ANTEPRIMA'),
-          const SizedBox(height: 10),
-
-          if (_isGiornoNotte) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: Column(children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.wb_sunny_outlined, color: Colors.amber, size: 14),
-                      SizedBox(width: 4),
-                      Text('Giorno', style: TextStyle(
-                          color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  _anteprimaConSfondo(
-                    sfondoId: _sfondoGiornoId,
-                    colore: _coloreBottoneGiorno,
-                    opacita: _opacitaBottoneGiorno,
-                    stile: _stileBottone, radius: radius,
-                    coloreTesto: _coloreTestoPerMomento(true),
-                  ),
-                ])),
-                const SizedBox(width: 8),
-                Expanded(child: Column(children: [
-                  const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.nights_stay_outlined, color: Colors.lightBlueAccent, size: 14),
-                      SizedBox(width: 4),
-                      Text('Notte', style: TextStyle(
-                          color: Colors.lightBlueAccent, fontSize: 12, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  _anteprimaConSfondo(
-                    sfondoId: _sfondoNotteId,
-                    colore: _coloreBottoneNotte,
-                    opacita: _opacitaBottoneNotte,
-                    stile: _stileBottone, radius: radius,
-                    coloreTesto: _coloreTestoPerMomento(false),
-                  ),
-                ])),
+              // ── COLORE + TRASPARENZA (solo se NON giornoNotte) ──────
+              if (!_isGiornoNotte) ...[
+                _intestazioneSezione(id: 'colore',
+                    titolo: 'COLORE E TRASPARENZA BOTTONI',
+                    icona: Icons.tune_rounded,
+                    sottotitolo: '${_nomePalette(_coloreBottone)} · ${(_opacitaBottone * 100).toStringAsFixed(0)}%',
+                    puntoColore: _coloreBottone),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: _isEspansa('colore')
+                      ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                      child: _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('Colore bottone', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 10),
+                        _gridPalette(selezionato: _coloreBottone, onTap: (c) => setState(() => _coloreBottone = c)),
+                        const SizedBox(height: 16),
+                        Row(children: [
+                          const Expanded(child: Text('Opacità bottone', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600))),
+                          Text('${(_opacitaBottone * 100).toStringAsFixed(0)}%', style: const TextStyle(color: Colors.white54, fontSize: 13)),
+                        ]),
+                        _sliderOpacita(valore: _opacitaBottone, colore: _coloreBottone, coloreSlider: Colors.white, onChanged: (v) => setState(() => _opacitaBottone = v)),
+                      ])))
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 8),
               ],
-            ),
-          ] else ...[
-            _card(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Sfondo anteprima',
-                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 60,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: tuttiSfondi.length,
-                    itemBuilder: (_, i) {
-                      final sel = _sfondoAnteprima == i;
-                      return GestureDetector(
-                        onTap: () => setState(() => _sfondoAnteprima = i),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: 80,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: sel
-                                ? Border.all(color: Colors.white, width: 2)
-                                : Border.all(color: Colors.white12, width: 1),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Image.asset(tuttiSfondi[i].pathMobile, fit: BoxFit.cover),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+
+              // ── COLORE BOTTONI (solo se GN) ───────────────────────
+              if (_isGiornoNotte) ...[
+                _intestazioneSezione(id: 'testo',
+                    titolo: 'COLORE BOTTONI',
+                    icona: Icons.tune_rounded,
+                    sottotitolo: 'Colore e opacità diversi per giorno/notte'),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: _isEspansa('testo')
+                      ? Padding(padding: const EdgeInsets.only(bottom: 4),
+                      child: _card(child: _sezioneTestoGiornoNotte()))
+                      : const SizedBox.shrink(),
                 ),
               ],
-            )),
-            const SizedBox(height: 12),
-            _anteprimaConSfondo(
-              sfondoId: _sfondoAnteprima < tuttiSfondi.length
-                  ? tuttiSfondi[_sfondoAnteprima].id
-                  : tuttiSfondi.first.id,
-              colore: _coloreBottone, opacita: _opacitaBottone,
-              stile: _stileBottone, radius: radius,
-              coloreTesto: _coloreTesto,
-            ),
-          ],
+              const SizedBox(height: 20),
 
-          const SizedBox(height: 32),
+              // ── ANTEPRIMA ─────────────────────────────────────────
+              _sezione('ANTEPRIMA'),
+              const SizedBox(height: 10),
 
-          // ── SALVA TEMA ────────────────────────────────────────
-          _sezione('SALVA TEMA'),
-          const SizedBox(height: 10),
-          _card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Dai un nome a questo tema per salvarlo e ritrovarlo nel menu impostazioni.',
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _nomeController,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                  maxLength: 30,
-                  decoration: InputDecoration(
-                    hintText: 'Es. Primavera, Notturno...',
-                    hintStyle: const TextStyle(color: Colors.white24),
-                    counterStyle: const TextStyle(color: Colors.white24),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.06),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Colors.white12),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Colors.white12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: Colors.white38),
-                    ),
-                    prefixIcon: const Icon(Icons.label_outline_rounded,
-                        color: Colors.white38, size: 20),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Builder(builder: (context) {
-                  final puoSalvare = widget.temaEsistente != null || provider.puoAggiungereNuovoTema;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!puoSalvare)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 10),
-                          child: Row(children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
-                            SizedBox(width: 6),
-                            Text('Hai raggiunto il massimo di 5 temi',
-                                style: TextStyle(color: Colors.orange, fontSize: 12)),
-                          ]),
-                        ),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton.icon(
-                          icon: _salvando
-                              ? const SizedBox(width: 18, height: 18,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Icon(Icons.save_rounded, size: 20, color: Colors.white),
-                          label: Text(
-                            _salvando ? 'Salvataggio...' : (widget.temaEsistente != null ? 'Salva modifiche' : 'Salva tema'),
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: puoSalvare ? const Color(0xFF1829E8) : Colors.white12,
-                            foregroundColor: Colors.white,
-                            elevation: puoSalvare ? 4 : 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: puoSalvare && !_salvando
-                              ? () => _salvaTema(context, provider)
-                              : null,
-                        ),
+              if (_isGiornoNotte) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: Column(children: [
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.wb_sunny_outlined, color: Colors.amber, size: 14),
+                          SizedBox(width: 4),
+                          Text('Giorno', style: TextStyle(
+                              color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
                       ),
-                    ],
-                  );
-                }),
+                      const SizedBox(height: 6),
+                      _anteprimaConSfondo(
+                        sfondoId: _sfondoGiornoId,
+                        colore: _coloreBottoneGiorno,
+                        opacita: _opacitaBottoneGiorno,
+                        stile: _stileBottone, radius: radius,
+                        coloreTesto: _coloreTestoPerMomento(true),
+                      ),
+                    ])),
+                    const SizedBox(width: 8),
+                    Expanded(child: Column(children: [
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.nights_stay_outlined, color: Colors.lightBlueAccent, size: 14),
+                          SizedBox(width: 4),
+                          Text('Notte', style: TextStyle(
+                              color: Colors.lightBlueAccent, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      _anteprimaConSfondo(
+                        sfondoId: _sfondoNotteId,
+                        colore: _coloreBottoneNotte,
+                        opacita: _opacitaBottoneNotte,
+                        stile: _stileBottone, radius: radius,
+                        coloreTesto: _coloreTestoPerMomento(false),
+                      ),
+                    ])),
+                  ],
+                ),
+              ] else ...[
+                _card(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Sfondo anteprima',
+                        style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 60,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: tuttiSfondi.length,
+                        itemBuilder: (_, i) {
+                          final sel = _sfondoAnteprima == i;
+                          return GestureDetector(
+                            onTap: () => setState(() => _sfondoAnteprima = i),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              width: 80,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                border: sel
+                                    ? Border.all(color: Colors.white, width: 2)
+                                    : Border.all(color: Colors.white12, width: 1),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.asset(tuttiSfondi[i].pathMobile, fit: BoxFit.cover),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                )),
+                const SizedBox(height: 12),
+                _anteprimaConSfondo(
+                  sfondoId: _sfondoAnteprima < tuttiSfondi.length
+                      ? tuttiSfondi[_sfondoAnteprima].id
+                      : tuttiSfondi.first.id,
+                  colore: _coloreBottone, opacita: _opacitaBottone,
+                  stile: _stileBottone, radius: radius,
+                  coloreTesto: _coloreTestoBottone,
+                ),
               ],
-            ),
+
+              const SizedBox(height: 32),
+
+              // ── SALVA TEMA ────────────────────────────────────────
+              _sezione('SALVA TEMA'),
+              const SizedBox(height: 10),
+              _card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Dai un nome a questo tema per salvarlo e ritrovarlo nel menu impostazioni.',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: _nomeController,
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      maxLength: 30,
+                      decoration: InputDecoration(
+                        hintText: 'Es. Primavera, Notturno...',
+                        hintStyle: const TextStyle(color: Colors.white24),
+                        counterStyle: const TextStyle(color: Colors.white24),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.06),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.white12),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.white12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: Colors.white38),
+                        ),
+                        prefixIcon: const Icon(Icons.label_outline_rounded,
+                            color: Colors.white38, size: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Builder(builder: (context) {
+                      final puoSalvare = provider.puoAggiungereNuovoTema;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!puoSalvare)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 10),
+                              child: Row(children: [
+                                Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
+                                SizedBox(width: 6),
+                                Text('Hai raggiunto il massimo di 5 temi',
+                                    style: TextStyle(color: Colors.orange, fontSize: 12)),
+                              ]),
+                            ),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton.icon(
+                              icon: _salvando
+                                  ? const SizedBox(width: 18, height: 18,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                  : const Icon(Icons.save_rounded, size: 20, color: Colors.white),
+                              label: Text(
+                                _salvando ? 'Salvataggio...' : (widget.temaEsistente != null ? 'Salva modifiche' : 'Salva tema'),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: puoSalvare ? const Color(0xFF1829E8) : Colors.white12,
+                                foregroundColor: Colors.white,
+                                elevation: puoSalvare ? 4 : 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              onPressed: puoSalvare && !_salvando
+                                  ? () => _salvaTema(context, provider)
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
-          const SizedBox(height: 20),
-        ],
+        ),
       ),
     );
   }
@@ -711,15 +707,10 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Scegli il colore del testo nei bottoni, oppure lascia automatico.',
-          style: TextStyle(color: Colors.white54, fontSize: 12),
-        ),
+        const Text('Scegli il colore del testo nei bottoni, oppure lascia automatico.',
+            style: TextStyle(color: Colors.white54, fontSize: 12)),
         const SizedBox(height: 14),
-        _bottoneAuto(
-          attivo: isAuto,
-          onTap: () => setState(() => _coloreTesto = null),
-        ),
+        _bottoneAuto(attivo: isAuto, onTap: () => setState(() => _coloreTesto = null)),
         const SizedBox(height: 12),
         _gridPalette(
           selezionato: _coloreTesto ?? _coloreTestoBottone,
@@ -737,77 +728,61 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
     final opacitaCorrente = _editaGiorno ? _opacitaBottoneGiorno : _opacitaBottoneNotte;
     final isAuto = coloreTestoCorrente == null;
     final coloreTestoEffettivo = coloreTestoCorrente ?? _testoAutoPerColore(coloreBottoneCorrente);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Imposta il colore del testo separatamente per giorno e notte.',
-          style: TextStyle(color: Colors.white54, fontSize: 12),
-        ),
-        const SizedBox(height: 14),
-        // Toggle giorno/notte
-        Row(children: [
-          Expanded(child: GestureDetector(
-            onTap: () => setState(() => _editaGiorno = true),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: _editaGiorno ? Colors.amber.withOpacity(0.2) : Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _editaGiorno ? Colors.amber : Colors.white12, width: 1),
-              ),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.wb_sunny_outlined, color: _editaGiorno ? Colors.amber : Colors.white38, size: 16),
-                const SizedBox(width: 6),
-                Text('Di giorno', style: TextStyle(
-                    color: _editaGiorno ? Colors.amber : Colors.white38,
-                    fontSize: 13, fontWeight: FontWeight.w600)),
-              ]),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Imposta il colore del testo separatamente per giorno e notte.',
+          style: TextStyle(color: Colors.white54, fontSize: 12)),
+      const SizedBox(height: 14),
+      Row(children: [
+        Expanded(child: GestureDetector(
+          onTap: () => setState(() => _editaGiorno = true),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: _editaGiorno ? Colors.amber.withOpacity(0.2) : Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _editaGiorno ? Colors.amber : Colors.white12, width: 1),
             ),
-          )),
-          const SizedBox(width: 8),
-          Expanded(child: GestureDetector(
-            onTap: () => setState(() => _editaGiorno = false),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: !_editaGiorno ? Colors.lightBlueAccent.withOpacity(0.15) : Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white12, width: 1),
-              ),
-              child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.nights_stay_outlined, color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white38, size: 16),
-                const SizedBox(width: 6),
-                Text('Di notte', style: TextStyle(
-                    color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white38,
-                    fontSize: 13, fontWeight: FontWeight.w600)),
-              ]),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.wb_sunny_outlined, color: _editaGiorno ? Colors.amber : Colors.white38, size: 16),
+              const SizedBox(width: 6),
+              Text('Di giorno', style: TextStyle(color: _editaGiorno ? Colors.amber : Colors.white38, fontSize: 13, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        )),
+        const SizedBox(width: 8),
+        Expanded(child: GestureDetector(
+          onTap: () => setState(() => _editaGiorno = false),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: !_editaGiorno ? Colors.lightBlueAccent.withOpacity(0.15) : Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white12, width: 1),
             ),
-          )),
-        ]),
-        const SizedBox(height: 12),
-        _bottoneAuto(
-          attivo: isAuto,
-          onTap: () => setState(() {
-            if (_editaGiorno) _coloreTestoGiorno = null;
-            else _coloreTestoNotte = null;
-          }),
-        ),
-        const SizedBox(height: 12),
-        _gridPalette(
-          selezionato: coloreTestoEffettivo,
-          onTap: (c) => setState(() {
-            if (_editaGiorno) _coloreTestoGiorno = c;
-            else _coloreTestoNotte = c;
-          }),
-        ),
-        const SizedBox(height: 14),
-        _anteprimaTesto(coloreBottoneCorrente, opacitaCorrente, coloreTestoEffettivo),
-      ],
-    );
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Icon(Icons.nights_stay_outlined, color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white38, size: 16),
+              const SizedBox(width: 6),
+              Text('Di notte', style: TextStyle(color: !_editaGiorno ? Colors.lightBlueAccent : Colors.white38, fontSize: 13, fontWeight: FontWeight.w600)),
+            ]),
+          ),
+        )),
+      ]),
+      const SizedBox(height: 12),
+      _bottoneAuto(attivo: isAuto, onTap: () => setState(() {
+        if (_editaGiorno) _coloreTestoGiorno = null; else _coloreTestoNotte = null;
+      })),
+      const SizedBox(height: 12),
+      _gridPalette(
+        selezionato: coloreTestoEffettivo,
+        onTap: (c) => setState(() {
+          if (_editaGiorno) _coloreTestoGiorno = c; else _coloreTestoNotte = c;
+        }),
+      ),
+      const SizedBox(height: 14),
+      _anteprimaTesto(coloreBottoneCorrente, opacitaCorrente, coloreTestoEffettivo),
+    ]);
   }
 
   Widget _bottoneAuto({required bool attivo, required VoidCallback onTap}) {
@@ -822,16 +797,10 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
           border: Border.all(color: attivo ? Colors.white54 : Colors.white12, width: 1),
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Icon(Icons.auto_awesome_rounded, size: 15,
-              color: attivo ? Colors.white : Colors.white38),
+          Icon(Icons.auto_awesome_rounded, size: 15, color: attivo ? Colors.white : Colors.white38),
           const SizedBox(width: 6),
-          Text('Automatico', style: TextStyle(
-              color: attivo ? Colors.white : Colors.white38,
-              fontSize: 13, fontWeight: FontWeight.w600)),
-          if (attivo) ...[
-            const SizedBox(width: 4),
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 13),
-          ],
+          Text('Automatico', style: TextStyle(color: attivo ? Colors.white : Colors.white38, fontSize: 13, fontWeight: FontWeight.w600)),
+          if (attivo) ...[const SizedBox(width: 4), const Icon(Icons.check_circle_rounded, color: Colors.white, size: 13)],
         ]),
       ),
     );
@@ -843,8 +812,7 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
       decoration: BoxDecoration(
         color: coloreBottone.withOpacity(opacita),
         borderRadius: BorderRadius.circular(10),
-        border: _stileBottone == StileBottone.outline
-            ? Border.all(color: coloreBottone, width: 1.5) : null,
+        border: _stileBottone == StileBottone.outline ? Border.all(color: coloreBottone, width: 1.5) : null,
       ),
       child: Center(child: Text('Anteprima testo bottone',
           style: TextStyle(color: coloreTesto, fontSize: 14, fontWeight: FontWeight.w600))),
@@ -1023,7 +991,7 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
           const Text('Sfondo', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 12),
           _grigliaSfondi(sfondi: sfondiDisponibili, idSelezionato: _sfondoFissoId,
-              onTap: (id) => setState(() => _sfondoFissoId = id)),
+              onTap: (id) => setState(() { _sfondoFissoId = id; _sfondoAnteprima = _indiceSfondoFisso(id); })),
         ]));
       case AlternanzaSfondo.giornoNotte:
         return Column(children: [
@@ -1157,8 +1125,7 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
   Widget _bottoneAnteprimaReale(String testo, IconData icona, Color colore, double opacita, double radius, StileBottone stile, {Color? coloreTesto}) {
     final isOutline = stile == StileBottone.outline;
     final isBianco  = colore == const Color(0xFFFFFFFF);
-    final Color testoC = coloreTesto
-        ?? (isOutline ? colore : isBianco ? Colors.black : Colors.white);
+    final Color testoC = coloreTesto ?? (isOutline ? colore : isBianco ? Colors.black : Colors.white);
     return Container(
       width: double.infinity, height: 42,
       decoration: BoxDecoration(
@@ -1169,9 +1136,7 @@ class _TemaPersonalizzatoScreenState extends State<TemaPersonalizzatoScreen> {
       child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(icona, size: 16, color: testoC),
         const SizedBox(width: 6),
-        Text(testo, style: TextStyle(
-            color: testoC,
-            fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+        Text(testo, style: TextStyle(color: testoC, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
       ]),
     );
   }

@@ -450,12 +450,9 @@ class _PodcastScreenState extends State<PodcastScreen> {
       default:
         kBottoneColore = _kBottoneClassico;
         kBottoneBordo = _kBottoneClassico;
-        kAttivoColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(0.5)
-            : _kAttivoClassico;
+        kAttivoColore = _kAttivoClassico;
         kPlayerColore = provider.isPersonalizzato
-            ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
-            : _kPlayerClassico;
+            ? provider.coloreBottoneAttivo : _kPlayerClassico;
         kAppBarColore = provider.isPersonalizzato
             ? provider.coloreBottoneAttivo.withOpacity(provider.opacitaBottoneAttiva)
             : _kAppBarClassico;
@@ -600,8 +597,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.stretch,
                                               children: [
                                                 InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
                                                   onTap: () => _riproduci(podcast),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
@@ -620,9 +615,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                 ),
                                                 Expanded(
                                                   child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                                    onTap: () => _riproduci(podcast),
                                                     child: Padding(
                                                       padding: const EdgeInsets.symmetric(vertical: 14),
                                                       child: Text(_displayName(podcast),
@@ -666,9 +659,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     if (pLista) {
                                       return Column(children: [
                                         InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
+                                          onTap: () => _riproduci(podcast),
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(
                                                 horizontal: 4, vertical: 14),
@@ -702,81 +693,78 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     }
 
                                     return Padding(
-                                        padding: const EdgeInsets.only(bottom: 6),
-                                        child: Container(
-                                          decoration: pOutline ? BoxDecoration(
-                                            borderRadius: BorderRadius.circular(pRadius),
-                                            border: Border.all(color: pColore, width: 1.5),
-                                          ) : null,
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(pRadius),
-                                            child: Material(
-                                              color: isAttivo ? kAttivoColore
-                                                  : pOutline ? Colors.transparent
-                                                  : pColore.withOpacity(pOpacita),
-                                          child: IntrinsicHeight(
-                                            child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                                              children: [
-                                                Expanded(
-                                                  child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(podcast),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.symmetric(
-                                                          horizontal: 12, vertical: 14),
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.center,
-                                                        children: [
-                                                          if (isAttivo && _isLoading && !_isWindows)
-                                                            SizedBox(width: 20, height: 20,
-                                                                child: CircularProgressIndicator(
-                                                                    color: kTestoColore, strokeWidth: 2))
-                                                          else
-                                                            Icon(
-                                                                isAttivo && _isPlaying && !_isWindows
-                                                                    ? Icons.pause_circle_outline_rounded
-                                                                    : Icons.play_circle_outline_rounded,
-                                                                size: 20, color: testoC),
-                                                          const SizedBox(width: 8),
-                                                          Expanded(
-                                                            child: Text(
-                                                              _displayName(podcast).toUpperCase(),
-                                                              textAlign: TextAlign.center,
-                                                              softWrap: true,
-                                                              style: TextStyle(
-                                                                fontSize: fontSize,
-                                                                color: testoC,
-                                                                letterSpacing: 0.3,
-                                                                fontWeight: isAttivo
-                                                                    ? FontWeight.bold : FontWeight.w500,
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Container(
+                                        decoration: pOutline ? BoxDecoration(
+                                          borderRadius: BorderRadius.circular(pRadius),
+                                          border: Border.all(color: pColore, width: 1.5),
+                                        ) : null,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(pRadius),
+                                          child: Material(
+                                            color: pOutline ? Colors.transparent
+                                                : pColore.withOpacity(isAttivo ? 1.0 : pOpacita),
+                                            child: IntrinsicHeight(
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Expanded(
+                                                    child: InkWell(
+                                                      onTap: () => _riproduci(podcast),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(
+                                                            horizontal: 12, vertical: 14),
+                                                        child: Row(
+                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                          children: [
+                                                            if (isAttivo && _isLoading && !_isWindows)
+                                                              SizedBox(width: 20, height: 20,
+                                                                  child: CircularProgressIndicator(
+                                                                      color: kTestoColore, strokeWidth: 2))
+                                                            else
+                                                              Icon(
+                                                                  isAttivo && _isPlaying && !_isWindows
+                                                                      ? Icons.pause_circle_outline_rounded
+                                                                      : Icons.play_circle_outline_rounded,
+                                                                  size: 20, color: testoC),
+                                                            const SizedBox(width: 8),
+                                                            Expanded(
+                                                              child: Text(
+                                                                _displayName(podcast).toUpperCase(),
+                                                                textAlign: TextAlign.center,
+                                                                softWrap: true,
+                                                                style: TextStyle(
+                                                                  fontSize: fontSize,
+                                                                  color: testoC,
+                                                                  letterSpacing: 0.3,
+                                                                  fontWeight: isAttivo
+                                                                      ? FontWeight.bold : FontWeight.w500,
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                                Container(width: 1,
-                                                    color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
-                                                InkWell(
-                                                  onTap: () => _scaricaPodcast(podcast),
-                                                  child: SizedBox(
-                                                    width: 44,
-                                                    child: Center(
-                                                      child: Icon(Icons.download_rounded,
-                                                          size: 18, color: kTestoSecColore),
+                                                  Container(width: 1,
+                                                      color: pOutline ? pColore : pColore.withOpacity(pOpacita)),
+                                                  InkWell(
+                                                    onTap: () => _scaricaPodcast(podcast),
+                                                    child: SizedBox(
+                                                      width: 44,
+                                                      child: Center(
+                                                        child: Icon(Icons.download_rounded,
+                                                            size: 18, color: kTestoSecColore),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
+                                      ),
                                     );
                                   }
                                 } else {
@@ -863,9 +851,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                           ),
                                                         ),
                                                         InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
+                                                          onTap: () => _riproduci(parte),
                                                           child: Padding(
                                                             padding: const EdgeInsets.symmetric(
                                                                 horizontal: 8, vertical: 12),
@@ -884,9 +870,7 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                                         ),
                                                         Expanded(
                                                           child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
+                                                            onTap: () => _riproduci(parte),
                                                             child: Padding(
                                                               padding: const EdgeInsets.symmetric(
                                                                   vertical: 12),
@@ -983,8 +967,6 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                               final isAttivo = _podcastAttivo == parte;
                                               return Column(children: [
                                                 InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
                                                   onTap: () => _riproduci(parte),
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
@@ -1018,143 +1000,139 @@ class _PodcastScreenState extends State<PodcastScreen> {
                                     }
 
                                     return Padding(
-                                    padding: const EdgeInsets.only(bottom: 6),
-                                    child: Container(
-                                    decoration: pOutline2 ? BoxDecoration(
-                                    borderRadius: BorderRadius.circular(pRadius2),
-                                    border: Border.all(color: pColore2, width: 1.5),
-                                    ) : null,
-                                    child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(pRadius2),
-                                    child: Material(
-                                    color: haAttivoInGruppo
-                                    ? kAttivoColore
-                                        : pOutline2 ? Colors.transparent
-                                        : pColore2.withOpacity(pOpacita2),
-                                          child: Column(
-                                            children: [
-                                              InkWell(
-                                                onTap: () => setState(() {
-                                                  if (isEspanso) {
-                                                    _gruppiEspansi.remove(gruppo.titolo);
-                                                  } else {
-                                                    _gruppiEspansi.add(gruppo.titolo);
-                                                  }
-                                                }),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 12, vertical: 14),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.queue_music_rounded,
-                                                          size: 18, color: testoC2),
-                                                      const SizedBox(width: 8),
-                                                      Expanded(
-                                                        child: Text(
-                                                          gruppo.titolo.toUpperCase(),
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            fontSize: fontSize,
-                                                            color: kTestoColore,
-                                                            fontWeight: FontWeight.w600,
-                                                            letterSpacing: 0.3,
+                                      padding: const EdgeInsets.only(bottom: 6),
+                                      child: Container(
+                                        decoration: pOutline2 ? BoxDecoration(
+                                          borderRadius: BorderRadius.circular(pRadius2),
+                                          border: Border.all(color: pColore2, width: 1.5),
+                                        ) : null,
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(pRadius2),
+                                          child: Material(
+                                            color: pOutline2 ? Colors.transparent
+                                                : pColore2.withOpacity(haAttivoInGruppo ? 1.0 : pOpacita2),
+                                            child: Column(
+                                              children: [
+                                                InkWell(
+                                                  onTap: () => setState(() {
+                                                    if (isEspanso) {
+                                                      _gruppiEspansi.remove(gruppo.titolo);
+                                                    } else {
+                                                      _gruppiEspansi.add(gruppo.titolo);
+                                                    }
+                                                  }),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 12, vertical: 14),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.queue_music_rounded,
+                                                            size: 18, color: testoC2),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            gruppo.titolo.toUpperCase(),
+                                                            textAlign: TextAlign.center,
+                                                            style: TextStyle(
+                                                              fontSize: fontSize,
+                                                              color: testoC2,
+                                                              fontWeight: FontWeight.w600,
+                                                              letterSpacing: 0.3,
+                                                            ),
                                                           ),
                                                         ),
-                                                      ),
-                                                      Text('${gruppo.parti.length} parti',
-                                                          style: TextStyle(
-                                                              fontSize: 11,
-                                                              color: kTestoSecColore)),
-                                                      const SizedBox(width: 6),
-                                                      AnimatedRotation(
-                                                        turns: isEspanso ? 0.5 : 0,
-                                                        duration: const Duration(milliseconds: 200),
-                                                        child: Icon(
-                                                            Icons.keyboard_arrow_down_rounded,
-                                                            color: kTestoColore, size: 20),
-                                                      ),
-                                                    ],
+                                                        Text('${gruppo.parti.length} parti',
+                                                            style: TextStyle(
+                                                                fontSize: 11,
+                                                                color: testoC2)),
+                                                        const SizedBox(width: 6),
+                                                        AnimatedRotation(
+                                                          turns: isEspanso ? 0.5 : 0,
+                                                          duration: const Duration(milliseconds: 200),
+                                                          child: Icon(
+                                                              Icons.keyboard_arrow_down_rounded,
+                                                              color: testoC2, size: 20),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              AnimatedSize(
-                                                duration: const Duration(milliseconds: 200),
-                                                curve: Curves.easeInOut,
-                                                child: isEspanso
-                                                    ? Column(
-                                                  children: gruppo.parti.map((parte) {
-                                                    final isAttivo = _podcastAttivo == parte;
-                                                    return IntrinsicHeight(
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                        CrossAxisAlignment.stretch,
-                                                        children: [
-                                                          Expanded(
-                                                            child: InkWell(
-                                                  splashColor: provider.coloreBottoneAttivo.withOpacity(0.2),
-                                                  highlightColor: provider.coloreBottoneAttivo.withOpacity(0.1),
-                                                  onTap: () => _riproduci(parte),
-                                                              child: Container(
-                                                                color: isAttivo
-                                                                    ? kAttivoColore
-                                                                    : Colors.black.withOpacity(0.15),
-                                                                padding: const EdgeInsets.symmetric(
-                                                                    horizontal: 16, vertical: 12),
-                                                                child: Row(
-                                                                  mainAxisAlignment:
-                                                                  MainAxisAlignment.center,
-                                                                  children: [
-                                                                    if (isAttivo && _isLoading && !_isWindows)
-                                                                      SizedBox(width: 18, height: 18,
-                                                                          child: CircularProgressIndicator(
-                                                                              color: kTestoColore, strokeWidth: 2))
-                                                                    else
-                                                                      Icon(
-                                                                          isAttivo && _isPlaying && !_isWindows
-                                                                              ? Icons.pause_circle_outline_rounded
-                                                                              : Icons.play_circle_outline_rounded,
-                                                                          size: 18, color: kTestoColore),
-                                                                    const SizedBox(width: 8),
-                                                                    Text(
-                                                                      _etichettaParte(parte).toUpperCase(),
-                                                                      style: TextStyle(
-                                                                        fontSize: fontSize - 1,
-                                                                        color: testoC2,
-                                                                        fontWeight: isAttivo
-                                                                            ? FontWeight.bold
-                                                                            : FontWeight.w500,
+                                                AnimatedSize(
+                                                  duration: const Duration(milliseconds: 200),
+                                                  curve: Curves.easeInOut,
+                                                  child: isEspanso
+                                                      ? Column(
+                                                    children: gruppo.parti.map((parte) {
+                                                      final isAttivo = _podcastAttivo == parte;
+                                                      return IntrinsicHeight(
+                                                        child: Row(
+                                                          crossAxisAlignment:
+                                                          CrossAxisAlignment.stretch,
+                                                          children: [
+                                                            Expanded(
+                                                              child: InkWell(
+                                                                onTap: () => _riproduci(parte),
+                                                                child: Container(
+                                                                  color: isAttivo
+                                                                      ? kAttivoColore
+                                                                      : Colors.black.withOpacity(0.15),
+                                                                  padding: const EdgeInsets.symmetric(
+                                                                      horizontal: 16, vertical: 12),
+                                                                  child: Row(
+                                                                    mainAxisAlignment:
+                                                                    MainAxisAlignment.center,
+                                                                    children: [
+                                                                      if (isAttivo && _isLoading && !_isWindows)
+                                                                        SizedBox(width: 18, height: 18,
+                                                                            child: CircularProgressIndicator(
+                                                                                color: kTestoColore, strokeWidth: 2))
+                                                                      else
+                                                                        Icon(
+                                                                            isAttivo && _isPlaying && !_isWindows
+                                                                                ? Icons.pause_circle_outline_rounded
+                                                                                : Icons.play_circle_outline_rounded,
+                                                                            size: 18, color: kTestoColore),
+                                                                      const SizedBox(width: 8),
+                                                                      Text(
+                                                                        _etichettaParte(parte).toUpperCase(),
+                                                                        style: TextStyle(
+                                                                          fontSize: fontSize - 1,
+                                                                          color: testoC2,
+                                                                          fontWeight: isAttivo
+                                                                              ? FontWeight.bold
+                                                                              : FontWeight.w500,
+                                                                        ),
                                                                       ),
-                                                                    ),
-                                                                  ],
+                                                                    ],
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
-                                                          ),
-                                                          InkWell(
-                                                            onTap: () => _scaricaPodcast(parte),
-                                                            child: Container(
-                                                              width: 44,
-                                                              color: isAttivo
-                                                                  ? kAttivoColore
-                                                                  : Colors.black.withOpacity(0.15),
-                                                              child: Center(
-                                                                child: Icon(Icons.download_rounded,
-                                                                    size: 16, color: kTestoSecColore),
+                                                            InkWell(
+                                                              onTap: () => _scaricaPodcast(parte),
+                                                              child: Container(
+                                                                width: 44,
+                                                                color: isAttivo
+                                                                    ? kAttivoColore
+                                                                    : Colors.black.withOpacity(0.15),
+                                                                child: Center(
+                                                                  child: Icon(Icons.download_rounded,
+                                                                      size: 16, color: kTestoSecColore),
+                                                                ),
                                                               ),
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  }).toList(),
-                                                )
-                                                    : const SizedBox.shrink(),
-                                              ),
-                                            ],
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                  )
+                                                      : const SizedBox.shrink(),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                       ),
-                                       ),
-                                     ),   // chiude Container
+                                        ),
+                                      ),   // chiude Container
                                     );     // chiude Padding
                                   }
                                 }
